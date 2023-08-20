@@ -34,11 +34,17 @@
                 div
                   {} $ :style (merge ui/column ui/expand)
                   div ({})
-                    button $ {} (:style ui/button) (:inner-text "\"Convert Data")
+                    button $ {} (:style ui/button) (:inner-text "\"Convert Calcit")
                       :on-click $ fn (e d!)
                         d! cursor $ assoc state :next-data nil
                         d! cursor $ assoc state :next-data
                           transform-snapshot $ parse-cirru-edn (:content state)
+                    =< 8 nil
+                    button $ {} (:style ui/button) (:inner-text "\"Convert Compact")
+                      :on-click $ fn (e d!)
+                        d! cursor $ assoc state :next-data nil
+                        d! cursor $ assoc state :next-data
+                          transform-compact $ parse-cirru-edn (:content state)
                   textarea $ {}
                     :value $ format-cirru-edn (:next-data state)
                     :class-name css/font-code!
@@ -61,6 +67,19 @@
                 :by $ :by expr
                 :at $ :at expr
                 :text $ :text expr
+        |transform-compact $ quote
+          defn transform-compact (data)
+            -> data $ update :files
+              fn (files)
+                -> files $ map-kv
+                  fn (k file)
+                    [] k $ -> file
+                      update :ns $ fn (c)
+                        %{} CodeEntry (:doc |) (:code c)
+                      update :defs $ fn (defs)
+                        -> defs $ map-kv
+                          fn (def-name code)
+                            [] def-name $ %{} CodeEntry (:doc |) (:code code)
         |transform-snapshot $ quote
           defn transform-snapshot (snapshot)
             let
