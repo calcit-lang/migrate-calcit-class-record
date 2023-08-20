@@ -1,11 +1,17 @@
 
 {} (:package |app)
   :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!) (:version |0.0.1)
-    :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/
+    :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
     |app.comp.container $ {}
       :defs $ {}
+        |CodeEntry $ quote
+          def CodeEntry $ new-record :CodeEntry :doc :code
+        |Expr $ quote
+          def Expr $ new-record :Expr :data :by :at
+        |Leaf $ quote
+          def Leaf $ new-record :Leaf :by :at :text
         |comp-container $ quote
           defcomp comp-container (reel)
             let
@@ -13,32 +19,71 @@
                 states $ :states store
                 cursor $ or (:cursor states) ([])
                 state $ or (:data states)
-                  {} $ :content "\""
+                  {} (:content "\"") (:next-data nil)
               div
-                {} $ :style (merge ui/global ui/row)
+                {} $ :style (merge ui/fullscreen ui/global ui/row)
                 textarea $ {}
                   :value $ :content state
                   :placeholder "\"Content"
+                  :class-name css/font-code!
                   :style $ merge ui/expand ui/textarea
-                    {} $ :height 320
+                    {} (:white-space :pre) (:font-size 12)
                   :on-input $ fn (e d!)
                     d! cursor $ assoc state :content (:value e)
-                =< 8 nil
+                =< 2 nil
                 div
-                  {} $ :style ui/expand
-                  comp-md "|This is some content with `code`"
-                  =< |8px nil
-                  button $ {} (:style ui/button) (:inner-text "\"Run")
-                    :on-click $ fn (e d!)
-                      println $ :content state
+                  {} $ :style (merge ui/column ui/expand)
+                  div ({})
+                    button $ {} (:style ui/button) (:inner-text "\"Convert Data")
+                      :on-click $ fn (e d!)
+                        d! cursor $ assoc state :next-data nil
+                        d! cursor $ assoc state :next-data
+                          transform-snapshot $ parse-cirru-edn (:content state)
+                  textarea $ {}
+                    :value $ format-cirru-edn (:next-data state)
+                    :class-name css/font-code!
+                    :placeholder "\"data"
+                    :style $ merge ui/expand ui/textarea
+                      {} (:white-space :pre) (:font-size 12)
+                    :disabled true
                 when dev? $ comp-reel (>> states :reel) reel ({})
+        |transform-code $ quote
+          defn transform-code (expr)
+            if
+              = :expr $ :type expr
+              %{} Expr
+                :by $ :by expr
+                :at $ :at expr
+                :data $ -> (:data expr)
+                  map-kv $ fn (k v)
+                    [] k $ transform-code v
+              %{} Leaf
+                :by $ :by expr
+                :at $ :at expr
+                :text $ :text expr
+        |transform-snapshot $ quote
+          defn transform-snapshot (snapshot)
+            -> snapshot $ update-in ([] :ir :files)
+              fn (files)
+                -> files $ map-kv
+                  fn (k file)
+                    [] k $ -> file
+                      update :ns $ fn (ns-data)
+                        %{} CodeEntry (:doc "\"")
+                          :code $ transform-code ns-data
+                      update :defs $ fn (defs)
+                        -> defs $ map-kv
+                          fn (def-name code)
+                            [] def-name $ %{} CodeEntry (:doc "\"")
+                              :code $ transform-code code
+                      dissoc :proc
       :ns $ quote
         ns app.comp.container $ :require (respo-ui.core :as ui)
           respo.core :refer $ defcomp defeffect <> >> div button textarea span input
           respo.comp.space :refer $ =<
           reel.comp.reel :refer $ comp-reel
-          respo-md.comp.md :refer $ comp-md
           app.config :refer $ dev?
+          respo-ui.css :as css
     |app.config $ {}
       :defs $ {}
         |dev? $ quote
@@ -54,7 +99,7 @@
           defn dispatch! (op)
             when
               and config/dev? $ not= op :states
-              println "\"Dispatch:" op
+              js/console.log "\"Dispatch:" op
             reset! *reel $ reel-updater updater @*reel op
         |main! $ quote
           defn main! ()
