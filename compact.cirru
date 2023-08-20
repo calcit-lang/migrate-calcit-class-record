@@ -63,20 +63,25 @@
                 :text $ :text expr
         |transform-snapshot $ quote
           defn transform-snapshot (snapshot)
-            -> snapshot $ update-in ([] :ir :files)
-              fn (files)
-                -> files $ map-kv
-                  fn (k file)
-                    [] k $ -> file
-                      update :ns $ fn (ns-data)
-                        %{} CodeEntry (:doc "\"")
-                          :code $ transform-code ns-data
-                      update :defs $ fn (defs)
-                        -> defs $ map-kv
-                          fn (def-name code)
-                            [] def-name $ %{} CodeEntry (:doc "\"")
-                              :code $ transform-code code
-                      dissoc :proc
+            let
+                next $ -> snapshot
+                  update-in ([] :ir :files)
+                    fn (files)
+                      -> files $ map-kv
+                        fn (k file)
+                          [] k $ -> file
+                            update :ns $ fn (ns-data)
+                              %{} CodeEntry (:doc "\"")
+                                :code $ transform-code ns-data
+                            update :defs $ fn (defs)
+                              -> defs $ map-kv
+                                fn (def-name code)
+                                  [] def-name $ %{} CodeEntry (:doc "\"")
+                                    :code $ transform-code code
+                            dissoc :proc
+              -> next (dissoc :files)
+                assoc :package $ get-in next ([] :ir :package)
+                assoc :files $ get-in next ([] :ir :files)
       :ns $ quote
         ns app.comp.container $ :require (respo-ui.core :as ui)
           respo.core :refer $ defcomp defeffect <> >> div button textarea span input
