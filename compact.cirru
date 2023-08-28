@@ -12,6 +12,9 @@
         |Expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             def Expr $ new-record :Expr :data :by :at
+        |FileEntry $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def FileEntry $ new-record :FileEntry :ns :defs
         |Leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             def Leaf $ new-record :Leaf :by :at :text
@@ -49,6 +52,12 @@
                           d! cursor $ assoc state :next-data nil
                           d! cursor $ assoc state :next-data
                             transform-compact $ parse-cirru-edn (:content state)
+                      =< 8 nil
+                      button $ {} (:style ui/button) (:inner-text "\"FileEntry")
+                        :on-click $ fn (e d!)
+                          d! cursor $ assoc state :next-data nil
+                          d! cursor $ assoc state :next-data
+                            transform-file-entry $ parse-cirru-edn (:content state)
                     textarea $ {}
                       :value $ format-cirru-edn (:next-data state)
                       :class-name css/font-code!
@@ -86,6 +95,14 @@
                           -> defs $ map-kv
                             fn (def-name code)
                               [] def-name $ %{} CodeEntry (:doc |) (:code code)
+        |transform-file-entry $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn transform-file-entry (snapshot)
+              update snapshot :files $ fn (files)
+                map-kv files $ fn (k v)
+                  [] k $ %{} FileEntry
+                    :ns $ :ns v
+                    :defs $ :defs v
         |transform-snapshot $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn transform-snapshot (snapshot)
@@ -105,7 +122,7 @@
                                     [] def-name $ %{} CodeEntry (:doc "\"")
                                       :code $ transform-code code
                               dissoc :proc
-                -> next (dissoc :files)
+                -> next (dissoc :ir)
                   assoc :package $ get-in next ([] :ir :package)
                   assoc :files $ get-in next ([] :ir :files)
       :ns $ %{} :CodeEntry (:doc |)
