@@ -4,7 +4,7 @@
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
-    |app.comp.container $ {}
+    |app.comp.container $ %{} :FileEntry
       :defs $ {}
         |CodeEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -27,45 +27,54 @@
                   cursor $ or (:cursor states) ([])
                   state $ or (:data states)
                     {} (:content "\"") (:next-data nil)
+                  display-text $ format-cirru-edn (:next-data state)
                 div
-                  {} $ :style (merge ui/fullscreen ui/global ui/row)
+                  {} $ :class-name (str-spaced css/fullscreen css/global css/row)
                   textarea $ {}
                     :value $ :content state
                     :placeholder "\"Content"
-                    :class-name css/font-code!
-                    :style $ merge ui/expand ui/textarea
-                      {} (:white-space :pre) (:font-size 12)
+                    :class-name $ str-spaced css/expand css/textarea css/font-code!
+                    :style $ {} (:white-space :pre) (:font-size 12)
                     :on-input $ fn (e d!)
                       d! cursor $ assoc state :content (:value e)
                   =< 2 nil
                   div
-                    {} $ :style (merge ui/column ui/expand)
+                    {} $ :class-name (str-spaced css/column css/expand)
                     div ({})
-                      button $ {} (:style ui/button) (:inner-text "\"Convert Calcit")
+                      button $ {} (:class-name css/button) (:inner-text "\"Convert Calcit")
                         :on-click $ fn (e d!)
                           d! cursor $ assoc state :next-data nil
                           d! cursor $ assoc state :next-data
                             transform-snapshot $ parse-cirru-edn (:content state)
                       =< 8 nil
-                      button $ {} (:style ui/button) (:inner-text "\"Convert Compact")
+                      button $ {} (:class-name css/button) (:inner-text "\"Convert Compact")
                         :on-click $ fn (e d!)
                           d! cursor $ assoc state :next-data nil
                           d! cursor $ assoc state :next-data
                             transform-compact $ parse-cirru-edn (:content state)
                       =< 8 nil
-                      button $ {} (:style ui/button) (:inner-text "\"FileEntry")
+                      button $ {} (:class-name css/button) (:inner-text "\"FileEntry")
                         :on-click $ fn (e d!)
                           d! cursor $ assoc state :next-data nil
                           d! cursor $ assoc state :next-data
                             transform-file-entry $ parse-cirru-edn (:content state)
-                    textarea $ {}
-                      :value $ format-cirru-edn (:next-data state)
-                      :class-name css/font-code!
+                    textarea $ {} (:value display-text)
+                      :class-name $ str-spaced css/expand css/textarea css/font-code!
                       :placeholder "\"data"
-                      :style $ merge ui/expand ui/textarea
-                        {} (:white-space :pre) (:font-size 12)
+                      :style $ {} (:white-space :pre) (:font-size 12)
                       :disabled true
+                    comp-copy display-text
                   when dev? $ comp-reel (>> states :reel) reel ({})
+        |comp-copy $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-copy (text)
+              [] (effect-copy text)
+                span $ {}
+        |effect-copy $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defeffect effect-copy (text) (action el at?)
+              if (= action :update)
+                do $ copy! text
         |transform-code $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn transform-code (expr)
@@ -112,16 +121,13 @@
                       fn (files)
                         -> files $ map-kv
                           fn (k file)
-                            [] k $ -> file
-                              update :ns $ fn (ns-data)
-                                %{} CodeEntry (:doc "\"")
-                                  :code $ transform-code ns-data
-                              update :defs $ fn (defs)
-                                -> defs $ map-kv
-                                  fn (def-name code)
-                                    [] def-name $ %{} CodeEntry (:doc "\"")
-                                      :code $ transform-code code
-                              dissoc :proc
+                            [] k $ %{} FileEntry
+                              :ns $ %{} CodeEntry (:doc "\"")
+                                :code $ transform-code (:ns file)
+                              :defs $ -> (:defs file)
+                                map-kv $ fn (def-name code)
+                                  [] def-name $ %{} CodeEntry (:doc "\"")
+                                    :code $ transform-code code
                 -> next (dissoc :ir)
                   assoc :package $ get-in next ([] :ir :package)
                   assoc :files $ get-in next ([] :ir :files)
@@ -133,7 +139,8 @@
             reel.comp.reel :refer $ comp-reel
             app.config :refer $ dev?
             respo-ui.css :as css
-    |app.config $ {}
+            "\"copy-to-clipboard" :default copy!
+    |app.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -143,7 +150,7 @@
             def site $ {} (:storage-key "\"workflow")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.config)
-    |app.main $ {}
+    |app.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -202,7 +209,7 @@
             app.config :as config
             "\"./calcit.build-errors" :default build-errors
             "\"bottom-tip" :default hud!
-    |app.schema $ {}
+    |app.schema $ %{} :FileEntry
       :defs $ {}
         |store $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -211,7 +218,7 @@
                 :cursor $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.schema)
-    |app.updater $ {}
+    |app.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
