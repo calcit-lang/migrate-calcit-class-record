@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "copy-to-clipboard": "^3.3.3",
-    "@calcit/procs": "^0.8.0-a5"
+    "@calcit/procs": "^0.8.0-a5",
+    "copy-text-to-clipboard": "^3.2.0"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",

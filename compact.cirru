@@ -139,7 +139,7 @@
             reel.comp.reel :refer $ comp-reel
             app.config :refer $ dev?
             respo-ui.css :as css
-            "\"copy-to-clipboard" :default copy!
+            "\"copy-text-to-clipboard" :default copy!
     |app.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)

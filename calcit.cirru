@@ -959,7 +959,7 @@
                     |h $ %{} :Leaf (:at 1692511603495) (:by |rJG4IHzWf) (:text |css)
                 |zD $ %{} :Expr (:at 1693415239360) (:by |rJG4IHzWf)
                   :data $ {}
-                    |T $ %{} :Leaf (:at 1693415240444) (:by |rJG4IHzWf) (:text "|\"copy-to-clipboard")
+                    |T $ %{} :Leaf (:at 1693582228609) (:by |rJG4IHzWf) (:text "|\"copy-text-to-clipboard")
                     |b $ %{} :Leaf (:at 1693415242661) (:by |rJG4IHzWf) (:text |:default)
                     |h $ %{} :Leaf (:at 1693415245386) (:by |rJG4IHzWf) (:text |copy!)
     |app.config $ %{} :FileEntry
