@@ -37,6 +37,8 @@
                     :style $ {} (:white-space :pre) (:font-size 12)
                     :on-input $ fn (e d!)
                       d! cursor $ assoc state :content (:value e)
+                    :on-paste $ fn (e d!)
+                      d! cursor $ assoc state :next-data nil 
                   =< 2 nil
                   div
                     {} $ :class-name (str-spaced css/column css/expand)
@@ -159,7 +161,7 @@
           :code $ quote
             defn dispatch! (op)
               when
-                and config/dev? $ not= op :states
+                and config/dev? $ not= (nth op 0) :states
                 js/console.log "\"Dispatch:" op
               reset! *reel $ reel-updater updater @*reel op
         |main! $ %{} :CodeEntry (:doc |)
