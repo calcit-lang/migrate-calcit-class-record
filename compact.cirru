@@ -38,45 +38,52 @@
                     :on-input $ fn (e d!)
                       d! cursor $ assoc state :content (:value e)
                     :on-paste $ fn (e d!)
-                      d! cursor $ assoc state :next-data nil 
+                      d! cursor $ assoc state :next-data nil
+                      d! $ :: :interact
                   =< 2 nil
                   div
                     {} $ :class-name (str-spaced css/column css/expand)
                     div ({})
                       button $ {} (:class-name css/button) (:inner-text "\"Convert Calcit")
                         :on-click $ fn (e d!)
-                          d! cursor $ assoc state :next-data nil
                           d! cursor $ assoc state :next-data
                             transform-snapshot $ parse-cirru-edn (:content state)
+                          d! $ :: :interact
                       =< 8 nil
                       button $ {} (:class-name css/button) (:inner-text "\"Convert Compact")
                         :on-click $ fn (e d!)
-                          d! cursor $ assoc state :next-data nil
                           d! cursor $ assoc state :next-data
                             transform-compact $ parse-cirru-edn (:content state)
+                          d! $ :: :interact
                       =< 8 nil
                       button $ {} (:class-name css/button) (:inner-text "\"FileEntry")
                         :on-click $ fn (e d!)
-                          d! cursor $ assoc state :next-data nil
                           d! cursor $ assoc state :next-data
                             transform-file-entry $ parse-cirru-edn (:content state)
+                          d! $ :: :interact
                     textarea $ {} (:value display-text)
                       :class-name $ str-spaced css/expand css/textarea css/font-code!
                       :placeholder "\"data"
                       :style $ {} (:white-space :pre) (:font-size 12)
                       :disabled true
-                    comp-copy display-text
+                    if (:interacted? store)
+                      comp-copy $ :next-data state
                   when dev? $ comp-reel (>> states :reel) reel ({})
         |comp-copy $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-copy (text)
-              [] (effect-copy text)
+            defcomp comp-copy (data)
+              [] (effect-copy data)
                 span $ {}
         |effect-copy $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defeffect effect-copy (text) (action el at?)
+            defeffect effect-copy (data) (action el at?)
+              println "\"Copy Effect:" action $ some? data
               if (= action :update)
-                do $ copy! text
+                if (some? data)
+                  let
+                      text $ format-cirru-edn data
+                    copy! text
+                    println "\"Copied!" $ count text
         |transform-code $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn transform-code (expr)
@@ -177,7 +184,8 @@
               let
                   raw $ js/localStorage.getItem (:storage-key config/site)
                 when (some? raw)
-                  dispatch! $ :: :hydrate-storage (parse-cirru-edn raw)
+                  dispatch! $ :: :hydrate-storage
+                    assoc (parse-cirru-edn raw) :interacted? false
               println "|App started."
         |mount-target $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -218,6 +226,7 @@
             def store $ {}
               :states $ {}
                 :cursor $ []
+              :interacted? false
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.schema)
     |app.updater $ %{} :FileEntry
@@ -229,6 +238,7 @@
                   :states cursor s
                   update-states store cursor s
                 (:hydrate-storage data) data
+                (:interact) (assoc store :interacted? true)
                 _ $ do (println "\"unknown op:" op) store
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
