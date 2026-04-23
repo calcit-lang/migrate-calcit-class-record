@@ -1,11 +1,15 @@
 {
+  "packageManager": "yarn@4.12.0",
+  "scripts": {
+    "compile": "cr js"
+  },
   "dependencies": {
-    "@calcit/procs": "^0.8.43",
+    "@calcit/procs": "^0.12.14",
     "copy-text-to-clipboard": "^3.2.0"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",
-    "vite": "^5.1.6"
+    "vite": "^8.0.7"
   },
   "version": "0.0.1"
 }
