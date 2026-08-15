@@ -4,7 +4,7 @@
     "compile": "cr js"
   },
   "dependencies": {
-    "@calcit/procs": "^0.12.14",
+    "@calcit/procs": "^0.13.16",
     "copy-text-to-clipboard": "^3.2.0"
   },
   "devDependencies": {
