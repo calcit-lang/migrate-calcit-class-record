@@ -16,9 +16,7 @@ jobs:
       with:
         node-version: 24
 
-    - uses: calcit-lang/setup-cr@0.0.8
-      with:
-        version: 0.12.14
+    - uses: calcit-lang/setup-cr@0.0.9
 
     - name: Enable Corepack
       run: |
@@ -29,9 +27,18 @@ jobs:
     - name: Install deps
       run: caps --ci && yarn install --immutable
 
+    - name: Validate Calcit snapshot and types
+      run: |
+        cr calcit.cirru edit format
+        git diff --exit-code -- calcit.cirru
+        cr calcit.cirru --check-only
+        cr calcit.cirru analyze check-types --summary-only --format json
+        cr calcit.cirru analyze weak-types --only schema-dynamic,code-dynamic --intent unresolved --summary-only --format json
+        cr calcit.cirru analyze deprecated --summary-only --format json
+
     - name: "compiles to js"
       run: >
-        cr js
+        cr calcit.cirru js
         && yarn vite build --base=./
 
     - name: Deploy to server
