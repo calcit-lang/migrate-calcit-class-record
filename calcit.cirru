@@ -1,50 +1,51 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |app) (:version |0.0.1)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --full` first. Manual edits must follow format and schema conventions, then run `calcit edit format`.") (:package |app)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
+      :feature-policy $ {}
       :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
   :files $ {}
-    |app.comp.container $ %{} 'FileEntry
+    'app.comp.container $ %{} 'FileEntry
       :defs $ {}
-        |CodeEntry $ %{} 'CodeEntry (:doc |)
+        'CodeEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct CodeEntry (:doc 'Dynamic) (:code 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
-        |Expr $ %{} 'CodeEntry (:doc |)
+          :schema $ :: 'StructDef
+        'Expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Expr (:data 'Dynamic) (:by 'Dynamic) (:at 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
-        |FileEntry $ %{} 'CodeEntry (:doc |)
+          :schema $ :: 'StructDef
+        'FileEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct FileEntry (:ns 'Dynamic) (:defs 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
-        |Leaf $ %{} 'CodeEntry (:doc |)
+          :schema $ :: 'StructDef
+        'Leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Leaf (:by 'Dynamic) (:at 'Dynamic) (:text 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
-        |comp-container $ %{} 'CodeEntry (:doc |)
+          :schema $ :: 'StructDef
+        'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-container (reel)
               let
                   store $ unsafe-coerce
                     unsafe-coerce (reel.schema/read-field reel :store) 'app.types/Store
                     , 'app.types/Store
-                  states $ &struct:get store :states
+                  states $ :states store
                   cursor $ or (&map:get states :cursor) ([])
                   state $ unsafe-coerce
                     or (&map:get states :data)
                       %{} app.types/State (:content |) (:next-data nil)
                     , 'app.types/State
-                  display-text $ format-cirru-edn (&struct:get state :next-data)
+                  display-text $ format-cirru-edn (:next-data state)
                 div
                   {} $ :class-name (str-spaced css/fullscreen css/global css/row)
                   textarea $ {}
-                    :value $ &struct:get state :content
+                    :value $ :content state
                     :placeholder |Content
                     :class-name $ str-spaced css/expand css/textarea css/font-code!
                     :style $ {} (:white-space :pre) (:font-size 12)
@@ -61,38 +62,38 @@
                       button $ {} (:class-name css/button) (:inner-text "|Convert Calcit")
                         :on-click $ fn (e d!)
                           d! cursor $ assoc state :next-data
-                            transform-snapshot $ parse-cirru-edn (&struct:get state :content)
+                            transform-snapshot $ parse-cirru-edn (:content state)
                           d! $ :: :interact
                       =< 8 nil
                       button $ {} (:class-name css/button) (:inner-text "|Convert Compact")
                         :on-click $ fn (e d!)
                           d! cursor $ assoc state :next-data
-                            transform-compact $ parse-cirru-edn (&struct:get state :content)
+                            transform-compact $ parse-cirru-edn (:content state)
                           d! $ :: :interact
                       =< 8 nil
                       button $ {} (:class-name css/button) (:inner-text |FileEntry)
                         :on-click $ fn (e d!)
                           d! cursor $ assoc state :next-data
-                            transform-file-entry $ parse-cirru-edn (&struct:get state :content)
+                            transform-file-entry $ parse-cirru-edn (:content state)
                           d! $ :: :interact
                     textarea $ {} (:value display-text)
                       :class-name $ str-spaced css/expand css/textarea css/font-code!
                       :placeholder |data
                       :style $ {} (:white-space :pre) (:font-size 12)
                       :disabled true
-                    if (&struct:get store :interacted?)
-                      comp-copy $ &struct:get state :next-data
+                    if (:interacted? store)
+                      comp-copy $ :next-data state
                   when dev? $ comp-reel (>> states :reel) reel ({})
           :examples $ []
           :schema $ :: 'Dynamic
-        |comp-copy $ %{} 'CodeEntry (:doc |)
+        'comp-copy $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-copy (data)
               [] (effect-copy data)
                 span $ {}
           :examples $ []
           :schema $ :: 'Dynamic
-        |effect-copy $ %{} 'CodeEntry (:doc |)
+        'effect-copy $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defeffect effect-copy (data) (action el at?)
               println "|Copy Effect:" action $ some? data
@@ -104,7 +105,7 @@
                     println |Copied! $ count text
           :examples $ []
           :schema $ :: 'Dynamic
-        |transform-code $ %{} 'CodeEntry (:doc |)
+        'transform-code $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn transform-code (expr)
               if
@@ -121,7 +122,7 @@
                   :text $ &map:get expr :text
           :examples $ []
           :schema $ :: 'Dynamic
-        |transform-compact $ %{} 'CodeEntry (:doc |)
+        'transform-compact $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn transform-compact (data)
               -> data $ update :files
@@ -137,7 +138,7 @@
                               [] def-name $ %{} CodeEntry (:doc |) (:code code)
           :examples $ []
           :schema $ :: 'Dynamic
-        |transform-file-entry $ %{} 'CodeEntry (:doc |)
+        'transform-file-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn transform-file-entry (snapshot)
               update snapshot :files $ fn (files)
@@ -147,7 +148,7 @@
                     :defs $ &map:get v :defs
           :examples $ []
           :schema $ :: 'Dynamic
-        |transform-snapshot $ %{} 'CodeEntry (:doc |)
+        'transform-snapshot $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn transform-snapshot (snapshot)
               let
@@ -183,38 +184,40 @@
             respo-ui.css :as css
             |copy-text-to-clipboard :default copy!
             reel.schema :as reel-schema
-    |app.config $ %{} 'FileEntry
+    'app.config $ %{} 'FileEntry
       :defs $ {}
-        |dev? $ %{} 'CodeEntry (:doc |)
+        'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def dev? $ = |dev
               option:unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Dynamic
-        |site $ %{} 'CodeEntry (:doc |)
+        'site $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def site $ %{} app.types/SiteConfig (:storage-key |workflow)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'app.types/SiteConfig
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns app.config)
-    |app.main $ %{} 'FileEntry
+    'app.main $ %{} 'FileEntry
       :defs $ {}
-        |*reel $ %{} 'CodeEntry (:doc |)
+        '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
           :schema $ :: 'Dynamic
-        |dispatch! $ %{} 'CodeEntry (:doc |)
+        'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op)
               when
-                and config/dev? $ not= (nth op 0) :states
+                and config/dev? $ not=
+                  option:unwrap-or (nth op 0) :unknown
+                  , :states
                 js/console.log |Dispatch: op
               reset! *reel $ reel-updater updater @*reel op
           :examples $ []
           :schema $ :: 'Dynamic
-        |main! $ %{} 'CodeEntry (:doc |)
+        'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! ()
               println "|Running mode:" $ if config/dev? |dev |release
@@ -225,7 +228,7 @@
               js/window.addEventListener |beforeunload $ fn (event) (persist-storage!)
               flipped js/setInterval 60000 persist-storage!
               let
-                  raw $ js/localStorage.getItem (&struct:get config/site :storage-key)
+                  raw $ js/localStorage.getItem (:storage-key config/site)
                 when (js-present? raw)
                   dispatch! $ :: :hydrate-storage
                     assoc
@@ -237,19 +240,19 @@
             {} (:return 'Unit)
               :args $ []
               :features $ #{} :js-ffi
-        |mount-target $ %{} 'CodeEntry (:doc |)
+        'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def mount-target $ js/document.querySelector |.app
           :examples $ []
           :schema $ :: 'Dynamic
-        |persist-storage! $ %{} 'CodeEntry (:doc |)
+        'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn persist-storage! () (js/console.log |persist)
-              js/localStorage.setItem (&struct:get config/site :storage-key)
-                format-cirru-edn $ &struct:get @*reel :store
+              js/localStorage.setItem (:storage-key config/site)
+                format-cirru-edn $ reel.schema/read-field @*reel :store
           :examples $ []
           :schema $ :: 'Dynamic
-        |reload! $ %{} 'CodeEntry (:doc |)
+        'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ if (nil? build-errors)
               do (remove-watch *reel :changes) (clear-cache!)
@@ -259,7 +262,7 @@
               hud! |error build-errors
           :examples $ []
           :schema $ :: 'Dynamic
-        |render-app! $ %{} 'CodeEntry (:doc |)
+        'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn render-app! () $ render! mount-target (comp-container @*reel) dispatch!
           :examples $ []
@@ -277,9 +280,9 @@
             app.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
-    |app.schema $ %{} 'FileEntry
+    'app.schema $ %{} 'FileEntry
       :defs $ {}
-        |store $ %{} 'CodeEntry (:doc |)
+        'store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def store $ %{} app.types/Store
               :states $ {}
@@ -290,31 +293,31 @@
         :code $ quote
           ns app.schema $ :require
             app.types :refer $ Store
-    |app.types $ %{} 'FileEntry
+    'app.types $ %{} 'FileEntry
       :defs $ {}
-        |SiteConfig $ %{} 'CodeEntry (:doc |)
+        'SiteConfig $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct SiteConfig $ :storage-key 'String
           :examples $ []
-          :schema $ :: 'Dynamic
-        |State $ %{} 'CodeEntry (:doc |)
+          :schema $ :: 'StructDef
+        'State $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct State (:content 'String) (:next-data 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
-        |Store $ %{} 'CodeEntry (:doc |)
+          :schema $ :: 'StructDef
+        'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Store (:states 'Map) (:interacted? 'Bool)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'StructDef
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns app.types)
-    |app.updater $ %{} 'FileEntry
+    'app.updater $ %{} 'FileEntry
       :defs $ {}
-        |updater $ %{} 'CodeEntry (:doc |)
+        'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn updater (store op op-id op-time)
-              tag-match op
+              match op
                 (:states cursor s) (update-states store cursor s)
                 (:hydrate-storage data) data
                 (:interact) (assoc store :interacted? true)
