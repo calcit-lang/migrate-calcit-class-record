@@ -1,5 +1,8 @@
 name: Upload
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -10,13 +13,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+      with:
+        persist-credentials: false
 
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
       with:
         node-version: 24
-
-    - uses: calcit-lang/setup-cr@0.0.9
 
     - name: Enable Corepack
       run: |
@@ -24,24 +27,30 @@ jobs:
         corepack prepare yarn@4.12.0 --activate
         yarn --version
 
+    - uses: calcit-lang/setup-calcit@704b3f5cd6f9ce3bd1e0c926dbdd1d181adb8180 # v1
+
     - name: Install deps
-      run: caps --ci && yarn install --immutable
+      run: caps --strict --ci && yarn install --immutable
+
+    - name: Verify Calcit runtime toolchain
+      run: caps verify --toolchain
 
     - name: Validate Calcit snapshot and types
       run: |
-        cr calcit.cirru edit format
+        calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
-        cr calcit.cirru --check-only
-        cr calcit.cirru analyze check-types --summary-only --format json
-        cr calcit.cirru analyze weak-types --only schema-dynamic,code-dynamic --intent unresolved --summary-only --format json
-        cr calcit.cirru analyze deprecated --summary-only --format json
+        calcit calcit.cirru --check-only
+        calcit calcit.cirru analyze check-types --summary-only --format json
+        calcit calcit.cirru analyze weak-types --only schema-dynamic,code-dynamic --intent unresolved --summary-only --format json
+        calcit calcit.cirru analyze deprecated --summary-only --format json
 
     - name: "compiles to js"
       run: >
-        cr calcit.cirru js
+        calcit calcit.cirru js
         && yarn vite build --base=./
 
     - name: Deploy to server
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       id: deploy
       uses: Pendect/action-rsyncer@v2.0.0
       env:
@@ -54,4 +63,5 @@ jobs:
         dest: 'rsync-user@tiye.me:/web-assets/repo/${{ github.repository }}'
 
     - name: Display status from deploy
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: echo "${{ steps.deploy.outputs.status }}"
