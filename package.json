@@ -4,7 +4,7 @@
     "compile": "calcit calcit.cirru js"
   },
   "dependencies": {
-    "@calcit/procs": "0.13.77",
+    "@calcit/procs": "0.14.16",
     "copy-text-to-clipboard": "^3.2.0"
   },
   "devDependencies": {
