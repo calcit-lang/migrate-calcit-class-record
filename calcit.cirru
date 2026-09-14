@@ -358,7 +358,19 @@
               match (get data :states)
                 (:some states)
                   if (map? states)
-                    %some $ Store :states (assert-type states 'Map) :interacted? false
+                    let
+                        cursor-valid? $ match (get states :cursor)
+                          (:some cursor) (list? cursor)
+                          (:none) true
+                        data-valid? $ match (get states :data)
+                          (:some state)
+                            if (struct? state)
+                              struct-match state (State typed-state true) (_ _ false)
+                              , false
+                          (:none) true
+                      if (and cursor-valid? data-valid?)
+                        %some $ Store :states (assert-type states 'Map) :interacted? false
+                        %none
                     %none
                 (:none) (%none)
               %none
