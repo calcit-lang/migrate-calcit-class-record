@@ -92,7 +92,7 @@
                   if (:interacted? store)
                     comp-copy $ :next-data state
                     span $ {}
-                when dev? $ comp-reel (>> states :reel) reel $ {}
+                when dev? $ comp-typed-reel (>> states :reel) reel $ {}
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] $ :: 'reel.typed/State 'app.types/Op 'app.types/Store
@@ -208,7 +208,7 @@
           :require (respo-ui.core :as ui)
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input
             respo.comp.space :refer $ =<
-            reel.comp.reel :refer $ comp-reel
+            reel.comp.reel :refer $ comp-typed-reel
             app.config :refer $ dev?
             respo-ui.css :as css
             |copy-text-to-clipboard :default copy!
@@ -313,9 +313,7 @@
             app.comp.container :refer $ comp-container
             app.updater :refer $ updater
             app.schema :as schema
-            reel.util :refer $ listen-devtools!
-            reel.core :refer $ reel-updater refresh-reel
-            reel.schema :as reel-schema
+            reel.util :refer $ listen-devtools! generate-id!
             app.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
@@ -369,11 +367,11 @@
                               , false
                           (:none) true
                       if (and cursor-valid? data-valid?)
-                        %some $ Store :states (assert-type states 'Map) :interacted? false
-                        %none
-                    %none
-                (:none) (%none)
-              %none
+                        Option :some $ Store :states (assert-type states 'Map) :interacted? false
+                        Option :none
+                    Option :none
+                (:none) (Option :none)
+              Option :none
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
