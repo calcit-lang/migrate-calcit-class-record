@@ -1,15 +1,18 @@
 {
   "packageManager": "yarn@4.18.0",
   "scripts": {
-    "compile": "calcit calcit.cirru js"
+    "compile": "calcit calcit.cirru js",
+    "build": "vite build",
+    "release": "yarn compile && yarn build",
+    "dev": "vite"
   },
   "dependencies": {
-    "@calcit/procs": "0.24.3",
+    "@calcit/procs": "0.27.0",
     "copy-text-to-clipboard": "^3.2.0"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",
-    "vite": "^8.3.0"
+    "vite": "8.3.0"
   },
   "version": "0.0.3"
 }
