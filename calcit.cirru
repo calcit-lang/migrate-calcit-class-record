@@ -11,11 +11,14 @@
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'CodeEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct CodeEntry (:doc 'Dynamic) (:code 'Dynamic)
+          :code $ quote $ defstruct CodeEntry (:doc 'String) (:code 'Dynamic)
           :examples $ []
           :schema $ :: 'StructDef
         'Expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Expr (:data 'Dynamic) (:by 'Dynamic) (:at 'Dynamic)
+          :code $ quote $ defstruct Expr
+            :data $ :: 'Map 'Dynamic 'Dynamic
+            :by 'Dynamic
+            :at 'Dynamic
           :examples $ []
           :schema $ :: 'StructDef
         'FileEntry $ %{} 'CodeEntry (:doc |)
@@ -29,7 +32,7 @@
         'as-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-map (data)
             if (map? data)
-              assert-type data $ :: 'Map 'Dynamic 'Dynamic
+              decode-map-as data $ :: 'Map 'Dynamic 'Dynamic
               raise |Expected_map
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -41,13 +44,16 @@
                 store $ :store reel
                 states $ :states store
                 cursor $ match (get states :cursor)
-                  (:some value) (assert-type value 'List)
+                  (:some value)
+                    decode-map-as value $ :: 'List 'Dynamic
                   (:none) ([])
-                state $ assert-type
-                  match (get states :data)
-                    (:some value) value
-                    (:none) (app.types/State :content | :next-data nil)
-                  , 'app.types/State
+                state $ match (get states :data)
+                  (:some value)
+                    if (struct? value)
+                      struct-match value (types/State checked checked)
+                        _ other $ raise "|Expected a State struct"
+                      raise "|Expected a State struct"
+                  (:none) (types/State :content | :next-data nil)
                 display-text $ format-cirru-edn $ :next-data state
               div
                 {} $ :class-name $ str-spaced css/fullscreen css/global css/row
@@ -57,33 +63,35 @@
                   :class-name $ str-spaced css/expand css/textarea css/font-code!
                   :style $ {} (:white-space :pre) (:font-size 12)
                   :on-input $ fn (e d!)
-                    d! $ app.types/Op :states cursor $ assoc state :content
-                      assert-type (&map:get e :value) 'String
+                    d! $ types/app-event $ app.types/Op :states cursor
+                      assoc state :content $ decode-map-as
+                        .unwrap-or (get e :value) nil
+                        , 'String
                   :on $ {} $ :paste
                     fn (e d!)
-                      d! $ app.types/Op :states cursor $ assoc state :next-data nil
-                      d! $ app.types/Op :interact
+                      d! $ types/app-event $ app.types/Op :states cursor (assoc state :next-data nil)
+                      d! $ types/app-event $ app.types/Op :interact
                 =< 2 0
                 div
                   {} $ :class-name $ str-spaced css/column css/expand
                   div ({})
                     button $ {} (:class-name css/button) (:inner-text |Convert_Calcit)
                       :on-click $ fn (e d!)
-                        d! $ app.types/Op :states cursor $ assoc state :next-data
-                          transform-snapshot $ parse-cirru-edn $ :content state
-                        d! $ app.types/Op :interact
+                        d! $ types/app-event $ app.types/Op :states cursor
+                          assoc state :next-data $ transform-snapshot $ parse-cirru-edn (:content state)
+                        d! $ types/app-event $ app.types/Op :interact
                     =< 8 0
                     button $ {} (:class-name css/button) (:inner-text |Convert_Compact)
                       :on-click $ fn (e d!)
-                        d! $ app.types/Op :states cursor $ assoc state :next-data
-                          transform-compact $ parse-cirru-edn $ :content state
-                        d! $ app.types/Op :interact
+                        d! $ types/app-event $ app.types/Op :states cursor
+                          assoc state :next-data $ transform-compact $ parse-cirru-edn (:content state)
+                        d! $ types/app-event $ app.types/Op :interact
                     =< 8 0
                     button $ {} (:class-name css/button) (:inner-text |FileEntry)
                       :on-click $ fn (e d!)
-                        d! $ app.types/Op :states cursor $ assoc state :next-data
-                          transform-file-entry $ parse-cirru-edn $ :content state
-                        d! $ app.types/Op :interact
+                        d! $ types/app-event $ app.types/Op :states cursor
+                          assoc state :next-data $ transform-file-entry $ parse-cirru-edn (:content state)
+                        d! $ types/app-event $ app.types/Op :interact
                   textarea $ {} (:value display-text)
                     :class-name $ str-spaced css/expand css/textarea css/font-code!
                     :placeholder |data
@@ -105,13 +113,14 @@
             :args $ [] 'Dynamic
         'effect-copy $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-copy (data) (action el at?)
-            println "|Copy Effect:" action $ some? data
+            println "|Copy Effect:" action $ non-nil? data
             if (= action :update)
-              if (some? data)
+              if (non-nil? data)
                 let
                     text $ format-cirru-edn data
                   copy! text
                   println |Copied! $ count text
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'Dynamic
@@ -120,18 +129,26 @@
           :code $ quote $ defn transform-code (expr)
             let
                 source $ as-map expr
-                node-type $ &map:get source :type
+                node-type $ .unwrap-or (get source :type) nil
               if
                 and (tag? node-type)
-                  = (assert-type node-type 'Tag) :expr
-                Expr :by (&map:get source :by) :at (&map:get source :at) :data $ filter-map-kv
-                  as-map $ &map:get source :data
-                  fn (k v)
-                    hint-fn $ {}
-                      :args $ [] 'Dynamic 'Dynamic
-                      :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
-                    %:: MapEntryDecision :keep k $ transform-code v
-                Leaf :by (&map:get source :by) :at (&map:get source :at) :text $ &map:get source :text
+                  = (decode-map-as node-type 'Tag) :expr
+                Expr :by
+                  .unwrap-or (get source :by) nil
+                  , :at
+                    .unwrap-or (get source :at) nil
+                    , :data $ filter-map-kv
+                      as-map $ .unwrap-or (get source :data) nil
+                      fn (k v)
+                        hint-fn $ {}
+                          :args $ [] 'Dynamic 'Dynamic
+                          :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
+                        MapEntryDecision :keep k $ transform-code v
+                Leaf :by
+                  .unwrap-or (get source :by) nil
+                  , :at
+                    .unwrap-or (get source :at) nil
+                    , :text $ .unwrap-or (get source :text) nil
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic
@@ -139,70 +156,106 @@
           :code $ quote $ defn transform-compact (data)
             let
                 root $ as-map data
-                files $ as-map $ &map:get root :files
+                files $ as-map $ .unwrap-or (get root :files) nil
               assoc root :files $ filter-map-kv files $ fn (k file)
                 hint-fn $ {}
                   :args $ [] 'Dynamic 'Dynamic
                   :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
                 let
                     file-map $ as-map file
-                    defs $ as-map $ &map:get file-map :defs
+                    defs $ as-map $ .unwrap-or (get file-map :defs) nil
                     next-defs $ filter-map-kv defs $ fn (def-name code)
                       hint-fn $ {}
                         :args $ [] 'Dynamic 'Dynamic
                         :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
-                      %:: MapEntryDecision :keep def-name $ %{} CodeEntry (:doc |) (:code code)
-                  %:: MapEntryDecision :keep k $ assoc
-                    assoc file-map :ns $ %{} CodeEntry (:doc |)
-                      :code $ &map:get file-map :ns
+                      MapEntryDecision :keep def-name $ CodeEntry :doc | :code code
+                  MapEntryDecision :keep k $ assoc
+                    assoc file-map :ns $ CodeEntry :doc | :code $ .unwrap-or (get file-map :ns) nil
                     , :defs next-defs
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'transform-file-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-file-entry (snapshot)
             let
                 root $ as-map snapshot
-                files $ as-map $ &map:get root :files
+                files $ as-map $ .unwrap-or (get root :files) nil
               assoc root :files $ filter-map-kv files $ fn (k file)
                 hint-fn $ {}
                   :args $ [] 'Dynamic 'Dynamic
                   :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
                 let
                     file-map $ as-map file
-                  %:: MapEntryDecision :keep k $ FileEntry :ns (&map:get file-map :ns) :defs $ &map:get file-map :defs
+                  MapEntryDecision :keep k $ FileEntry :ns
+                    .unwrap-or (get file-map :ns) nil
+                    , :defs $ .unwrap-or (get file-map :defs) nil
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'transform-snapshot $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-snapshot (snapshot)
             let
                 root $ as-map snapshot
-                ir $ as-map $ &map:get root :ir
-                files $ as-map $ &map:get ir :files
+                ir $ as-map $ .unwrap-or (get root :ir) nil
+                files $ as-map $ .unwrap-or (get ir :files) nil
                 next-files $ filter-map-kv files $ fn (k file)
                   hint-fn $ {}
                     :args $ [] 'Dynamic 'Dynamic
                     :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
                   let
                       file-map $ as-map file
-                      defs $ as-map $ &map:get file-map :defs
+                      defs $ as-map $ .unwrap-or (get file-map :defs) nil
                       next-defs $ filter-map-kv defs $ fn (def-name code)
                         hint-fn $ {}
                           :args $ [] 'Dynamic 'Dynamic
                           :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
-                        %:: MapEntryDecision :keep def-name $ %{} CodeEntry (:doc |)
-                          :code $ transform-code code
-                    %:: MapEntryDecision :keep k $ FileEntry :ns
-                      %{} CodeEntry (:doc |)
-                        :code $ transform-code $ &map:get file-map :ns
+                        MapEntryDecision :keep def-name $ CodeEntry :doc | :code $ transform-code code
+                    MapEntryDecision :keep k $ FileEntry :ns
+                      CodeEntry :doc | :code $ transform-code $ .unwrap-or (get file-map :ns) nil
                       , :defs next-defs
               assoc
-                assoc (dissoc root :ir) :package $ &map:get ir :package
+                assoc (dissoc root :ir) :package $ .unwrap-or (get ir :package) nil
                 , :files next-files
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
+            :return $ :: 'Map 'Dynamic 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-three-legacy-formats)
+            :code $ quote $ do
+              let
+                  leaf $ {} (:type :leaf) (:text |name)
+                  expected-leaf $ Leaf :by nil :at nil :text |name
+                  input $ {} (:extra |keep)
+                    :ir $ {} (:package |demo)
+                      :files $ {} $ |demo.main
+                        {} (:ns leaf)
+                          :defs $ {} $ |main leaf
+                  expected $ {} (:extra |keep) (:package |demo)
+                    :files $ {} $ |demo.main
+                      FileEntry :ns (CodeEntry :doc | :code expected-leaf) :defs $ {} $ |main (CodeEntry :doc | :code expected-leaf)
+                assert= (format-cirru-edn expected)
+                  format-cirru-edn $ transform-snapshot input
+              let
+                  input $ {} $ :files
+                    {} $ |demo.main $ {} (:ns |namespace-data)
+                      :defs $ {}
+                  expected $ {} $ :files
+                    {} $ |demo.main $ FileEntry :ns |namespace-data :defs ({})
+                assert= (format-cirru-edn expected)
+                  format-cirru-edn $ transform-file-entry input
+              let
+                  input $ {} $ :files
+                    {} $ |demo.main $ {} (:ns |namespace-data) (:extra |keep)
+                      :defs $ {} $ |main |definition-data
+                  expected $ {} $ :files
+                    {} $ |demo.main $ {} (:extra |keep)
+                      :ns $ CodeEntry :doc | :code |namespace-data
+                      :defs $ {} $ |main (CodeEntry :doc | :code |definition-data)
+                assert= (format-cirru-edn expected)
+                  format-cirru-edn $ transform-compact input
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require (respo-ui.core :as ui)
@@ -230,23 +283,22 @@
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *reel (typed/new-reel schema/store)
+          :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
           :schema $ :: 'Ref $ :: 'reel.typed/State 'app.types/Op 'app.types/Store
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch! (op)
-            when config/dev? $ js/console.log |Dispatch: op
-            let
-                typed-op $ assert-type op 'Enum
-                control $ typed/decode-control typed-op
-              reset! *reel $ assert-type
-                match control
-                  (:some action) (typed/apply-control updater @*reel action)
+          :code $ quote $ defn dispatch! (event)
+            if (enum? event)
+              do
+                when config/dev? $ js/console.log |Dispatch: event
+                match (typed/decode-control event)
+                  (:some action)
+                    reset! *reel $ typed/apply-control updater @*reel action
                   (:none)
-                    typed/record-op updater @*reel (assert-type typed-op 'app.types/Op) (generate-id!)
+                    reset! *reel $ typed/record-op updater @*reel (types/read-app-event event) (generate-id!)
                       :timestamp $ shared/date-now-snapshot
-                :: 'reel.typed/State 'app.types/Op 'app.types/Store
-              , &unit
+                , &unit
+              raise "|Expected a UI event enum"
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic
@@ -256,7 +308,7 @@
             println |Running_mode: $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
             render-app!
-            add-watch *reel :changes $ fn (reel prev) (render-app!)
+            add-watch! *reel :changes $ fn (reel prev) (render-app!)
             listen-devtools! |k dispatch!
             browser/set-before-unload! $ fn (event) (persist-storage!)
             browser/set-interval! persist-storage! 60000
@@ -266,7 +318,7 @@
                 match
                   app.types/decode-store $ parse-cirru-edn raw
                   (:some stored)
-                    dispatch! $ app.types/Op :hydrate-storage stored
+                    dispatch! $ types/app-event $ app.types/Op :hydrate-storage stored
                   (:none) (hud! |error |Ignored_invalid_saved_state)
               (:none) &unit
             println |App_started.
@@ -276,9 +328,9 @@
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
-            option:unwrap $ browser/query-selector |.app
+            narrow-element $ .unwrap $ browser/query-selector |.app
           :examples $ []
-          :schema $ :: 'js-ffi.browser/DomElementHost
+          :schema $ :: 'respo.dom/DomElement
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set! (:storage-key config/site)
@@ -290,11 +342,12 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (remove-watch *reel :changes) (clear-cache!)
-                add-watch *reel :changes $ fn (reel prev) (render-app!)
+              do (remove-watch! *reel :changes) (clear-cache!)
+                add-watch! *reel :changes $ fn (reel prev) (render-app!)
                 reset! *reel $ typed/refresh updater @*reel schema/store
                 hud! |ok~ |Ok
               hud! |error build-errors
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -321,6 +374,7 @@
             js-ffi.browser :as browser
             js-ffi.shared :as shared
             app.types :as types
+            respo.ffi.browser :refer $ narrow-element
     'app.schema $ %{} 'FileEntry
       :defs $ {} $ 'store
         %{} 'CodeEntry (:doc |)
@@ -334,9 +388,16 @@
     'app.types $ %{} 'FileEntry
       :defs $ {}
         'Op $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum Op (:states 'List 'Dynamic) (:hydrate-storage 'app.types/Store) (:interact)
+          :code $ quote $ defenum Op
+            :states (:: 'List 'Dynamic) 'Dynamic
+            :hydrate-storage 'app.types/Store
+            :interact
           :examples $ []
           :schema $ :: 'EnumDef
+        'OpEnvelope $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct OpEnvelope (:op 'app.types/Op)
+          :examples $ []
+          :schema $ :: 'StructDef
         'SiteConfig $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct SiteConfig (:storage-key 'String)
           :examples $ []
@@ -346,9 +407,17 @@
           :examples $ []
           :schema $ :: 'StructDef
         'Store $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Store (:states 'Map) (:interacted? 'Bool)
+          :code $ quote $ defstruct Store
+            :states $ :: 'Map 'Dynamic 'Dynamic
+            :interacted? 'Bool
           :examples $ []
           :schema $ :: 'StructDef
+        'app-event $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn app-event (op)
+            :: :app/event $ OpEnvelope :op op
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Enum)
+            :args $ [] 'app.types/Op
         'decode-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-store (data)
             if
@@ -367,7 +436,9 @@
                               , false
                           (:none) true
                       if (and cursor-valid? data-valid?)
-                        Option :some $ Store :states (assert-type states 'Map) :interacted? false
+                        Option :some $ Store :states
+                          decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
+                          , :interacted? false
                         Option :none
                     Option :none
                 (:none) (Option :none)
@@ -375,8 +446,20 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'calcit.core/Option 'app.types/Store
+            :return $ :: 'Option 'app.types/Store
+        'read-app-event $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-app-event (event)
+            match event
+              (:app/event envelope)
+                if (struct? envelope)
+                  struct-match envelope
+                    OpEnvelope checked $ :op checked
+                    _ other $ raise "|Expected an app OpEnvelope"
+                  raise "|Expected an app OpEnvelope"
+              _ $ raise "|Unknown UI event; reload after upgrading the application"
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'app.types/Op)
+            :args $ [] 'Enum
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.types
     'app.updater $ %{} 'FileEntry
@@ -385,9 +468,9 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor s)
-                assoc store :states $ assert-type
+                assoc store :states $ decode-map-as
                   update-state-tree (:states store) cursor s
-                  , 'Map
+                  :: 'Map 'Dynamic 'Dynamic
               (:hydrate-storage data) data
               (:interact) (assoc store :interacted? true)
           :examples $ []
@@ -395,4 +478,4 @@
             :args $ [] 'app.types/Store 'app.types/Op 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
-          :require $ respo.cursor :refer $ [] update-state-tree
+          :require $ respo.cursor :refer $ update-state-tree
