@@ -307,11 +307,6 @@
           :code $ quote $ defn main! ()
             println |Running_mode: $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
-            render-app!
-            add-watch! *reel :changes $ fn (reel prev) (render-app!)
-            listen-devtools! |k dispatch!
-            browser/set-before-unload! $ fn (event) (persist-storage!)
-            browser/set-interval! persist-storage! 60000
             match
               browser/storage-get $ :storage-key config/site
               (:some raw)
@@ -319,8 +314,13 @@
                   app.types/decode-store $ parse-cirru-edn raw
                   (:some stored)
                     dispatch! $ types/app-event $ app.types/Op :hydrate-storage stored
-                  (:none) (hud! |error |Ignored_invalid_saved_state)
+                  (:none) (raise |Invalid_saved_state)
               (:none) &unit
+            render-app!
+            add-watch! *reel :changes $ fn (reel prev) (render-app!)
+            listen-devtools! |k dispatch!
+            browser/set-before-unload! $ fn (event) (persist-storage!)
+            browser/set-interval! persist-storage! 60000
             println |App_started.
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
