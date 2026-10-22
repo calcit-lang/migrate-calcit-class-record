@@ -314,7 +314,8 @@
                   app.types/decode-store $ parse-cirru-edn raw
                   (:some stored)
                     dispatch! $ types/app-event $ app.types/Op :hydrate-storage stored
-                  (:none) (raise |Invalid_saved_state)
+                  (:none)
+                    do (hud! |error |Invalid_saved_state) (raise |Invalid_saved_state)
               (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel prev) (render-app!)
