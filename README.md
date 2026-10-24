@@ -7,7 +7,7 @@ Demo http://repo.calcit-lang.org/migrate-calcit-class-record/ .
 ### 0.30.1 迁移：用户需要注意
 
 当前候选配对精确正式 Calcit/procs `0.30.1`，模块依赖改用正式
-Respo `0.16.124`、UI `0.8.0`、Reel `0.6.41`、js-ffi `0.2.5`，传递 Router `0.8.37`。
+Respo `0.16.126`、UI `0.8.1`、Reel `0.6.42`、js-ffi `0.2.6`，传递 Router `0.8.38`。
 升级后请重启开发服务并完整刷新页面，
 不要保留旧热重载回调；UI 操作通过具名载体恢复真实 Op，记录到 Reel 前会解包，
 不改变业务 Op、存储 key 或三种转换输出的数据结构。
@@ -42,9 +42,15 @@ calcit calcit.cirru js
 yarn vite build --base=./
 ```
 
-Before changing the Snapshot, read `calcit docs agents --contract` and
-`calcit docs read upgrade`, then preview the current syntax rules with
-`calcit fix --preset surface-latest-v2 --format edn`.
+Before changing the Snapshot, read `calcit docs agents --contract`, inspect the
+affected definitions through official query views, and use the structured editor.
+The historical `surface-latest-v2` preview is no longer a mandatory step.
+Use diagnostics and the original tests to guide targeted fixes instead of adding
+application-specific rewrite rules to the compiler.
+
+本轮只迁移开发模式读取的 Option 默认值调用，以及复制日志的 String 长度读取；
+三个旧格式转换函数、原附带测试、HUD、启动恢复及持久化顺序保持不变。
+这不表示旧输入需求已消失，也不自动提升转换结果到最新 Snapshot metadata。
 
 ### Workflow
 
