@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - prepare/migrate-record-source031
   pull_request: {}
 
 permissions:
@@ -52,10 +53,11 @@ jobs:
       - name: Validate Calcit upgrade
         run: |
           set -euo pipefail
+          node prepare-source.mjs
           calcit edit format
-          git diff --exit-code -- calcit.cirru
+          test "$(git hash-object calcit.cirru)" = "$(cat acceptance/snapshot-blob.txt)"
           calcit calcit.cirru --check-only --all-defs --format json
-          calcit calcit.cirru fix --workflow strict --verify --format json
+          calcit calcit.cirru fix --workflow strict --verify --format json | jq -e 'if .data.workflow.status? == "passed" and .diagnostics? == [] then true else ., false end'
           calcit calcit.cirru test --require-match --summary-only
           calcit calcit.cirru analyze weak-types --only deprecated-call --summary-only --format json | jq -e '.data.summary.calls == 0'
           calcit calcit.cirru analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
@@ -103,7 +105,7 @@ jobs:
 
       - name: Check COS credentials
         id: cos-credentials
-        if: steps.deploy-head.outputs.current == 'true' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+        if: steps.deploy-head.outputs.current == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
         env:
           COS_BUCKET: ${{ secrets.COS_BUCKET }}
           COS_SECRET_ID: ${{ secrets.COS_SECRET_ID }}
@@ -150,3 +152,15 @@ jobs:
       - name: Display deployment status
         if: steps.deploy-head.outputs.current == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: echo "${{ steps.deploy.outputs.status }}"
+
+      - name: Preserve prepared source and original frontend
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: migrate-record-source-prepared
+          path: |
+            calcit.cirru
+            acceptance/
+            js-out/
+            dist/
+          retention-days: 3

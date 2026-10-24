@@ -1,0 +1,3193 @@
+[
+  {
+    "code": [
+      "def",
+      "calcit-dirname",
+      "|"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.$meta/calcit-dirname",
+    "js_ffi": null,
+    "schema": null,
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "calcit-filename",
+      "|calcit.cirru"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.$meta/calcit-filename",
+    "js_ffi": null,
+    "schema": null,
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "CodeEntry",
+      [
+        ":doc",
+        "'String"
+      ],
+      [
+        ":code",
+        "'Dynamic"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/CodeEntry",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "Expr",
+      [
+        ":data",
+        [
+          "::",
+          "'Map",
+          "'Dynamic",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":by",
+        "'Dynamic"
+      ],
+      [
+        ":at",
+        "'Dynamic"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/Expr",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "FileEntry",
+      [
+        ":ns",
+        "'Dynamic"
+      ],
+      [
+        ":defs",
+        "'Dynamic"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/FileEntry",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "Leaf",
+      [
+        ":by",
+        "'Dynamic"
+      ],
+      [
+        ":at",
+        "'Dynamic"
+      ],
+      [
+        ":text",
+        "'Dynamic"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/Leaf",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "as-map",
+      [
+        "data"
+      ],
+      [
+        "if",
+        [
+          "map?",
+          "data"
+        ],
+        [
+          "decode-map-as",
+          "data",
+          [
+            "::",
+            "'Map",
+            "'Dynamic",
+            "'Dynamic"
+          ]
+        ],
+        [
+          "raise",
+          "|Expected_map"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/as-map",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":return",
+        [
+          "::",
+          "'Map",
+          "'Dynamic",
+          "'Dynamic"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defcomp",
+      "comp-container",
+      [
+        "reel"
+      ],
+      [
+        "let",
+        [
+          [
+            "store",
+            [
+              ":store",
+              "reel"
+            ]
+          ],
+          [
+            "states",
+            [
+              ":states",
+              "store"
+            ]
+          ],
+          [
+            "cursor",
+            [
+              "match",
+              [
+                "get",
+                "states",
+                ":cursor"
+              ],
+              [
+                [
+                  ":some",
+                  "value"
+                ],
+                [
+                  "decode-map-as",
+                  "value",
+                  [
+                    "::",
+                    "'List",
+                    "'Dynamic"
+                  ]
+                ]
+              ],
+              [
+                [
+                  ":none"
+                ],
+                [
+                  "[]"
+                ]
+              ]
+            ]
+          ],
+          [
+            "state",
+            [
+              "match",
+              [
+                "get",
+                "states",
+                ":data"
+              ],
+              [
+                [
+                  ":some",
+                  "value"
+                ],
+                [
+                  "if",
+                  [
+                    "struct?",
+                    "value"
+                  ],
+                  [
+                    "struct-match",
+                    "value",
+                    [
+                      "types/State",
+                      "checked",
+                      "checked"
+                    ],
+                    [
+                      "_",
+                      "other",
+                      [
+                        "raise",
+                        "|Expected a State struct"
+                      ]
+                    ]
+                  ],
+                  [
+                    "raise",
+                    "|Expected a State struct"
+                  ]
+                ]
+              ],
+              [
+                [
+                  ":none"
+                ],
+                [
+                  "types/State",
+                  ":content",
+                  "|",
+                  ":next-data",
+                  "nil"
+                ]
+              ]
+            ]
+          ],
+          [
+            "display-text",
+            [
+              "format-cirru-edn",
+              [
+                ":next-data",
+                "state"
+              ]
+            ]
+          ]
+        ],
+        [
+          "div",
+          [
+            "{}",
+            [
+              ":class-name",
+              [
+                "str-spaced",
+                "css/fullscreen",
+                "css/global",
+                "css/row"
+              ]
+            ]
+          ],
+          [
+            "textarea",
+            [
+              "{}",
+              [
+                ":value",
+                [
+                  ":content",
+                  "state"
+                ]
+              ],
+              [
+                ":placeholder",
+                "|Content"
+              ],
+              [
+                ":class-name",
+                [
+                  "str-spaced",
+                  "css/expand",
+                  "css/textarea",
+                  "css/font-code!"
+                ]
+              ],
+              [
+                ":style",
+                [
+                  "{}",
+                  [
+                    ":white-space",
+                    ":pre"
+                  ],
+                  [
+                    ":font-size",
+                    "12"
+                  ]
+                ]
+              ],
+              [
+                ":on-input",
+                [
+                  "fn",
+                  [
+                    "e",
+                    "d!"
+                  ],
+                  [
+                    "d!",
+                    [
+                      "types/app-event",
+                      [
+                        "app.types/Op",
+                        ":states",
+                        "cursor",
+                        [
+                          "assoc",
+                          "state",
+                          ":content",
+                          [
+                            "decode-map-as",
+                            [
+                              ".unwrap-or",
+                              [
+                                "get",
+                                "e",
+                                ":value"
+                              ],
+                              "nil"
+                            ],
+                            "'String"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                ":on",
+                [
+                  "{}",
+                  [
+                    ":paste",
+                    [
+                      "fn",
+                      [
+                        "e",
+                        "d!"
+                      ],
+                      [
+                        "d!",
+                        [
+                          "types/app-event",
+                          [
+                            "app.types/Op",
+                            ":states",
+                            "cursor",
+                            [
+                              "assoc",
+                              "state",
+                              ":next-data",
+                              "nil"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "d!",
+                        [
+                          "types/app-event",
+                          [
+                            "app.types/Op",
+                            ":interact"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ],
+          [
+            "=<",
+            "2",
+            "0"
+          ],
+          [
+            "div",
+            [
+              "{}",
+              [
+                ":class-name",
+                [
+                  "str-spaced",
+                  "css/column",
+                  "css/expand"
+                ]
+              ]
+            ],
+            [
+              "div",
+              [
+                "{}"
+              ],
+              [
+                "button",
+                [
+                  "{}",
+                  [
+                    ":class-name",
+                    "css/button"
+                  ],
+                  [
+                    ":inner-text",
+                    "|Convert_Calcit"
+                  ],
+                  [
+                    ":on-click",
+                    [
+                      "fn",
+                      [
+                        "e",
+                        "d!"
+                      ],
+                      [
+                        "d!",
+                        [
+                          "types/app-event",
+                          [
+                            "app.types/Op",
+                            ":states",
+                            "cursor",
+                            [
+                              "assoc",
+                              "state",
+                              ":next-data",
+                              [
+                                "transform-snapshot",
+                                [
+                                  "parse-cirru-edn",
+                                  [
+                                    ":content",
+                                    "state"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "d!",
+                        [
+                          "types/app-event",
+                          [
+                            "app.types/Op",
+                            ":interact"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "=<",
+                "8",
+                "0"
+              ],
+              [
+                "button",
+                [
+                  "{}",
+                  [
+                    ":class-name",
+                    "css/button"
+                  ],
+                  [
+                    ":inner-text",
+                    "|Convert_Compact"
+                  ],
+                  [
+                    ":on-click",
+                    [
+                      "fn",
+                      [
+                        "e",
+                        "d!"
+                      ],
+                      [
+                        "d!",
+                        [
+                          "types/app-event",
+                          [
+                            "app.types/Op",
+                            ":states",
+                            "cursor",
+                            [
+                              "assoc",
+                              "state",
+                              ":next-data",
+                              [
+                                "transform-compact",
+                                [
+                                  "parse-cirru-edn",
+                                  [
+                                    ":content",
+                                    "state"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "d!",
+                        [
+                          "types/app-event",
+                          [
+                            "app.types/Op",
+                            ":interact"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "=<",
+                "8",
+                "0"
+              ],
+              [
+                "button",
+                [
+                  "{}",
+                  [
+                    ":class-name",
+                    "css/button"
+                  ],
+                  [
+                    ":inner-text",
+                    "|FileEntry"
+                  ],
+                  [
+                    ":on-click",
+                    [
+                      "fn",
+                      [
+                        "e",
+                        "d!"
+                      ],
+                      [
+                        "d!",
+                        [
+                          "types/app-event",
+                          [
+                            "app.types/Op",
+                            ":states",
+                            "cursor",
+                            [
+                              "assoc",
+                              "state",
+                              ":next-data",
+                              [
+                                "transform-file-entry",
+                                [
+                                  "parse-cirru-edn",
+                                  [
+                                    ":content",
+                                    "state"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "d!",
+                        [
+                          "types/app-event",
+                          [
+                            "app.types/Op",
+                            ":interact"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ],
+            [
+              "textarea",
+              [
+                "{}",
+                [
+                  ":value",
+                  "display-text"
+                ],
+                [
+                  ":class-name",
+                  [
+                    "str-spaced",
+                    "css/expand",
+                    "css/textarea",
+                    "css/font-code!"
+                  ]
+                ],
+                [
+                  ":placeholder",
+                  "|data"
+                ],
+                [
+                  ":style",
+                  [
+                    "{}",
+                    [
+                      ":white-space",
+                      ":pre"
+                    ],
+                    [
+                      ":font-size",
+                      "12"
+                    ]
+                  ]
+                ],
+                [
+                  ":disabled",
+                  "true"
+                ]
+              ]
+            ],
+            [
+              "if",
+              [
+                ":interacted?",
+                "store"
+              ],
+              [
+                "comp-copy",
+                [
+                  ":next-data",
+                  "state"
+                ]
+              ],
+              [
+                "span",
+                [
+                  "{}"
+                ]
+              ]
+            ]
+          ],
+          [
+            "when",
+            "dev?",
+            [
+              "comp-typed-reel",
+              [
+                ">>",
+                "states",
+                ":reel"
+              ],
+              "reel",
+              [
+                "{}"
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/comp-container",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'respo.schema/Component"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          [
+            "::",
+            "'reel.typed/State",
+            "'app.types/Op",
+            "'app.types/Store"
+          ]
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defcomp",
+      "comp-copy",
+      [
+        "data"
+      ],
+      [
+        "[]",
+        [
+          "effect-copy",
+          "data"
+        ],
+        [
+          "span",
+          [
+            "{}"
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/comp-copy",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'respo.schema/Component"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defeffect",
+      "effect-copy",
+      [
+        "data"
+      ],
+      [
+        "action",
+        "el",
+        "at?"
+      ],
+      [
+        "println",
+        "|Copy Effect:",
+        "action",
+        [
+          "non-nil?",
+          "data"
+        ]
+      ],
+      [
+        "if",
+        [
+          "=",
+          "action",
+          ":update"
+        ],
+        [
+          "if",
+          [
+            "non-nil?",
+            "data"
+          ],
+          [
+            "let",
+            [
+              [
+                "text",
+                [
+                  "format-cirru-edn",
+                  "data"
+                ]
+              ]
+            ],
+            [
+              "copy!",
+              "text"
+            ],
+            [
+              "println",
+              "|Copied!",
+              [
+                "count",
+                "text"
+              ]
+            ]
+          ]
+        ]
+      ],
+      "&unit"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/effect-copy",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'respo.schema/Effect"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "transform-code",
+      [
+        "expr"
+      ],
+      [
+        "let",
+        [
+          [
+            "source",
+            [
+              "as-map",
+              "expr"
+            ]
+          ],
+          [
+            "node-type",
+            [
+              ".unwrap-or",
+              [
+                "get",
+                "source",
+                ":type"
+              ],
+              "nil"
+            ]
+          ]
+        ],
+        [
+          "if",
+          [
+            "and",
+            [
+              "tag?",
+              "node-type"
+            ],
+            [
+              "=",
+              [
+                "decode-map-as",
+                "node-type",
+                "'Tag"
+              ],
+              ":expr"
+            ]
+          ],
+          [
+            "Expr",
+            ":by",
+            [
+              ".unwrap-or",
+              [
+                "get",
+                "source",
+                ":by"
+              ],
+              "nil"
+            ],
+            ":at",
+            [
+              ".unwrap-or",
+              [
+                "get",
+                "source",
+                ":at"
+              ],
+              "nil"
+            ],
+            ":data",
+            [
+              "filter-map-kv",
+              [
+                "as-map",
+                [
+                  ".unwrap-or",
+                  [
+                    "get",
+                    "source",
+                    ":data"
+                  ],
+                  "nil"
+                ]
+              ],
+              [
+                "fn",
+                [
+                  "k",
+                  "v"
+                ],
+                [
+                  "hint-fn",
+                  [
+                    "{}",
+                    [
+                      ":args",
+                      [
+                        "[]",
+                        "'Dynamic",
+                        "'Dynamic"
+                      ]
+                    ],
+                    [
+                      ":return",
+                      [
+                        "::",
+                        "'MapEntryDecision",
+                        "'Dynamic",
+                        "'Dynamic"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "MapEntryDecision",
+                  ":keep",
+                  "k",
+                  [
+                    "transform-code",
+                    "v"
+                  ]
+                ]
+              ]
+            ]
+          ],
+          [
+            "Leaf",
+            ":by",
+            [
+              ".unwrap-or",
+              [
+                "get",
+                "source",
+                ":by"
+              ],
+              "nil"
+            ],
+            ":at",
+            [
+              ".unwrap-or",
+              [
+                "get",
+                "source",
+                ":at"
+              ],
+              "nil"
+            ],
+            ":text",
+            [
+              ".unwrap-or",
+              [
+                "get",
+                "source",
+                ":text"
+              ],
+              "nil"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/transform-code",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Dynamic"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "transform-compact",
+      [
+        "data"
+      ],
+      [
+        "let",
+        [
+          [
+            "root",
+            [
+              "as-map",
+              "data"
+            ]
+          ],
+          [
+            "files",
+            [
+              "as-map",
+              [
+                ".unwrap-or",
+                [
+                  "get",
+                  "root",
+                  ":files"
+                ],
+                "nil"
+              ]
+            ]
+          ]
+        ],
+        [
+          "assoc",
+          "root",
+          ":files",
+          [
+            "filter-map-kv",
+            "files",
+            [
+              "fn",
+              [
+                "k",
+                "file"
+              ],
+              [
+                "hint-fn",
+                [
+                  "{}",
+                  [
+                    ":args",
+                    [
+                      "[]",
+                      "'Dynamic",
+                      "'Dynamic"
+                    ]
+                  ],
+                  [
+                    ":return",
+                    [
+                      "::",
+                      "'MapEntryDecision",
+                      "'Dynamic",
+                      "'Dynamic"
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "let",
+                [
+                  [
+                    "file-map",
+                    [
+                      "as-map",
+                      "file"
+                    ]
+                  ],
+                  [
+                    "defs",
+                    [
+                      "as-map",
+                      [
+                        ".unwrap-or",
+                        [
+                          "get",
+                          "file-map",
+                          ":defs"
+                        ],
+                        "nil"
+                      ]
+                    ]
+                  ],
+                  [
+                    "next-defs",
+                    [
+                      "filter-map-kv",
+                      "defs",
+                      [
+                        "fn",
+                        [
+                          "def-name",
+                          "code"
+                        ],
+                        [
+                          "hint-fn",
+                          [
+                            "{}",
+                            [
+                              ":args",
+                              [
+                                "[]",
+                                "'Dynamic",
+                                "'Dynamic"
+                              ]
+                            ],
+                            [
+                              ":return",
+                              [
+                                "::",
+                                "'MapEntryDecision",
+                                "'Dynamic",
+                                "'Dynamic"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "MapEntryDecision",
+                          ":keep",
+                          "def-name",
+                          [
+                            "CodeEntry",
+                            ":doc",
+                            "|",
+                            ":code",
+                            "code"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "MapEntryDecision",
+                  ":keep",
+                  "k",
+                  [
+                    "assoc",
+                    [
+                      "assoc",
+                      "file-map",
+                      ":ns",
+                      [
+                        "CodeEntry",
+                        ":doc",
+                        "|",
+                        ":code",
+                        [
+                          ".unwrap-or",
+                          [
+                            "get",
+                            "file-map",
+                            ":ns"
+                          ],
+                          "nil"
+                        ]
+                      ]
+                    ],
+                    ":defs",
+                    "next-defs"
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/transform-compact",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":return",
+        [
+          "::",
+          "'Map",
+          "'Dynamic",
+          "'Dynamic"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "transform-file-entry",
+      [
+        "snapshot"
+      ],
+      [
+        "let",
+        [
+          [
+            "root",
+            [
+              "as-map",
+              "snapshot"
+            ]
+          ],
+          [
+            "files",
+            [
+              "as-map",
+              [
+                ".unwrap-or",
+                [
+                  "get",
+                  "root",
+                  ":files"
+                ],
+                "nil"
+              ]
+            ]
+          ]
+        ],
+        [
+          "assoc",
+          "root",
+          ":files",
+          [
+            "filter-map-kv",
+            "files",
+            [
+              "fn",
+              [
+                "k",
+                "file"
+              ],
+              [
+                "hint-fn",
+                [
+                  "{}",
+                  [
+                    ":args",
+                    [
+                      "[]",
+                      "'Dynamic",
+                      "'Dynamic"
+                    ]
+                  ],
+                  [
+                    ":return",
+                    [
+                      "::",
+                      "'MapEntryDecision",
+                      "'Dynamic",
+                      "'Dynamic"
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "let",
+                [
+                  [
+                    "file-map",
+                    [
+                      "as-map",
+                      "file"
+                    ]
+                  ]
+                ],
+                [
+                  "MapEntryDecision",
+                  ":keep",
+                  "k",
+                  [
+                    "FileEntry",
+                    ":ns",
+                    [
+                      ".unwrap-or",
+                      [
+                        "get",
+                        "file-map",
+                        ":ns"
+                      ],
+                      "nil"
+                    ],
+                    ":defs",
+                    [
+                      ".unwrap-or",
+                      [
+                        "get",
+                        "file-map",
+                        ":defs"
+                      ],
+                      "nil"
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/transform-file-entry",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":return",
+        [
+          "::",
+          "'Map",
+          "'Dynamic",
+          "'Dynamic"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "transform-snapshot",
+      [
+        "snapshot"
+      ],
+      [
+        "let",
+        [
+          [
+            "root",
+            [
+              "as-map",
+              "snapshot"
+            ]
+          ],
+          [
+            "ir",
+            [
+              "as-map",
+              [
+                ".unwrap-or",
+                [
+                  "get",
+                  "root",
+                  ":ir"
+                ],
+                "nil"
+              ]
+            ]
+          ],
+          [
+            "files",
+            [
+              "as-map",
+              [
+                ".unwrap-or",
+                [
+                  "get",
+                  "ir",
+                  ":files"
+                ],
+                "nil"
+              ]
+            ]
+          ],
+          [
+            "next-files",
+            [
+              "filter-map-kv",
+              "files",
+              [
+                "fn",
+                [
+                  "k",
+                  "file"
+                ],
+                [
+                  "hint-fn",
+                  [
+                    "{}",
+                    [
+                      ":args",
+                      [
+                        "[]",
+                        "'Dynamic",
+                        "'Dynamic"
+                      ]
+                    ],
+                    [
+                      ":return",
+                      [
+                        "::",
+                        "'MapEntryDecision",
+                        "'Dynamic",
+                        "'Dynamic"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "let",
+                  [
+                    [
+                      "file-map",
+                      [
+                        "as-map",
+                        "file"
+                      ]
+                    ],
+                    [
+                      "defs",
+                      [
+                        "as-map",
+                        [
+                          ".unwrap-or",
+                          [
+                            "get",
+                            "file-map",
+                            ":defs"
+                          ],
+                          "nil"
+                        ]
+                      ]
+                    ],
+                    [
+                      "next-defs",
+                      [
+                        "filter-map-kv",
+                        "defs",
+                        [
+                          "fn",
+                          [
+                            "def-name",
+                            "code"
+                          ],
+                          [
+                            "hint-fn",
+                            [
+                              "{}",
+                              [
+                                ":args",
+                                [
+                                  "[]",
+                                  "'Dynamic",
+                                  "'Dynamic"
+                                ]
+                              ],
+                              [
+                                ":return",
+                                [
+                                  "::",
+                                  "'MapEntryDecision",
+                                  "'Dynamic",
+                                  "'Dynamic"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "MapEntryDecision",
+                            ":keep",
+                            "def-name",
+                            [
+                              "CodeEntry",
+                              ":doc",
+                              "|",
+                              ":code",
+                              [
+                                "transform-code",
+                                "code"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "MapEntryDecision",
+                    ":keep",
+                    "k",
+                    [
+                      "FileEntry",
+                      ":ns",
+                      [
+                        "CodeEntry",
+                        ":doc",
+                        "|",
+                        ":code",
+                        [
+                          "transform-code",
+                          [
+                            ".unwrap-or",
+                            [
+                              "get",
+                              "file-map",
+                              ":ns"
+                            ],
+                            "nil"
+                          ]
+                        ]
+                      ],
+                      ":defs",
+                      "next-defs"
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ],
+        [
+          "assoc",
+          [
+            "assoc",
+            [
+              "dissoc",
+              "root",
+              ":ir"
+            ],
+            ":package",
+            [
+              ".unwrap-or",
+              [
+                "get",
+                "ir",
+                ":package"
+              ],
+              "nil"
+            ]
+          ],
+          ":files",
+          "next-files"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.comp.container/transform-snapshot",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":return",
+        [
+          "::",
+          "'Map",
+          "'Dynamic",
+          "'Dynamic"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": [
+      {
+        "code": [
+          "do",
+          [
+            "let",
+            [
+              [
+                "leaf",
+                [
+                  "{}",
+                  [
+                    ":type",
+                    ":leaf"
+                  ],
+                  [
+                    ":text",
+                    "|name"
+                  ]
+                ]
+              ],
+              [
+                "expected-leaf",
+                [
+                  "Leaf",
+                  ":by",
+                  "nil",
+                  ":at",
+                  "nil",
+                  ":text",
+                  "|name"
+                ]
+              ],
+              [
+                "input",
+                [
+                  "{}",
+                  [
+                    ":extra",
+                    "|keep"
+                  ],
+                  [
+                    ":ir",
+                    [
+                      "{}",
+                      [
+                        ":package",
+                        "|demo"
+                      ],
+                      [
+                        ":files",
+                        [
+                          "{}",
+                          [
+                            "|demo.main",
+                            [
+                              "{}",
+                              [
+                                ":ns",
+                                "leaf"
+                              ],
+                              [
+                                ":defs",
+                                [
+                                  "{}",
+                                  [
+                                    "|main",
+                                    "leaf"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "expected",
+                [
+                  "{}",
+                  [
+                    ":extra",
+                    "|keep"
+                  ],
+                  [
+                    ":package",
+                    "|demo"
+                  ],
+                  [
+                    ":files",
+                    [
+                      "{}",
+                      [
+                        "|demo.main",
+                        [
+                          "FileEntry",
+                          ":ns",
+                          [
+                            "CodeEntry",
+                            ":doc",
+                            "|",
+                            ":code",
+                            "expected-leaf"
+                          ],
+                          ":defs",
+                          [
+                            "{}",
+                            [
+                              "|main",
+                              [
+                                "CodeEntry",
+                                ":doc",
+                                "|",
+                                ":code",
+                                "expected-leaf"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ],
+            [
+              "assert=",
+              [
+                "format-cirru-edn",
+                "expected"
+              ],
+              [
+                "format-cirru-edn",
+                [
+                  "transform-snapshot",
+                  "input"
+                ]
+              ]
+            ]
+          ],
+          [
+            "let",
+            [
+              [
+                "input",
+                [
+                  "{}",
+                  [
+                    ":files",
+                    [
+                      "{}",
+                      [
+                        "|demo.main",
+                        [
+                          "{}",
+                          [
+                            ":ns",
+                            "|namespace-data"
+                          ],
+                          [
+                            ":defs",
+                            [
+                              "{}"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "expected",
+                [
+                  "{}",
+                  [
+                    ":files",
+                    [
+                      "{}",
+                      [
+                        "|demo.main",
+                        [
+                          "FileEntry",
+                          ":ns",
+                          "|namespace-data",
+                          ":defs",
+                          [
+                            "{}"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ],
+            [
+              "assert=",
+              [
+                "format-cirru-edn",
+                "expected"
+              ],
+              [
+                "format-cirru-edn",
+                [
+                  "transform-file-entry",
+                  "input"
+                ]
+              ]
+            ]
+          ],
+          [
+            "let",
+            [
+              [
+                "input",
+                [
+                  "{}",
+                  [
+                    ":files",
+                    [
+                      "{}",
+                      [
+                        "|demo.main",
+                        [
+                          "{}",
+                          [
+                            ":ns",
+                            "|namespace-data"
+                          ],
+                          [
+                            ":extra",
+                            "|keep"
+                          ],
+                          [
+                            ":defs",
+                            [
+                              "{}",
+                              [
+                                "|main",
+                                "|definition-data"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "expected",
+                [
+                  "{}",
+                  [
+                    ":files",
+                    [
+                      "{}",
+                      [
+                        "|demo.main",
+                        [
+                          "{}",
+                          [
+                            ":extra",
+                            "|keep"
+                          ],
+                          [
+                            ":ns",
+                            [
+                              "CodeEntry",
+                              ":doc",
+                              "|",
+                              ":code",
+                              "|namespace-data"
+                            ]
+                          ],
+                          [
+                            ":defs",
+                            [
+                              "{}",
+                              [
+                                "|main",
+                                [
+                                  "CodeEntry",
+                                  ":doc",
+                                  "|",
+                                  ":code",
+                                  "|definition-data"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ],
+            [
+              "assert=",
+              [
+                "format-cirru-edn",
+                "expected"
+              ],
+              [
+                "format-cirru-edn",
+                [
+                  "transform-compact",
+                  "input"
+                ]
+              ]
+            ]
+          ]
+        ],
+        "name": "preserves-three-legacy-formats",
+        "tags": [
+          "unit"
+        ]
+      }
+    ]
+  },
+  {
+    "code": [
+      "def",
+      "dev?",
+      [
+        "=",
+        "|dev",
+        [
+          "option:unwrap-or",
+          [
+            "get-env",
+            "|mode"
+          ],
+          "|release"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.config/dev?",
+    "js_ffi": null,
+    "schema": "'Bool",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "site",
+      [
+        "app.types/SiteConfig",
+        ":storage-key",
+        "|workflow"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.config/site",
+    "js_ffi": null,
+    "schema": "'app.types/SiteConfig",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defref",
+      "*reel",
+      [
+        "typed/new-reel",
+        "schema/store"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.main/*reel",
+    "js_ffi": null,
+    "schema": [
+      "::",
+      "'Ref",
+      [
+        "::",
+        "'reel.typed/State",
+        "'app.types/Op",
+        "'app.types/Store"
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "dispatch!",
+      [
+        "event"
+      ],
+      [
+        "if",
+        [
+          "enum?",
+          "event"
+        ],
+        [
+          "do",
+          [
+            "when",
+            "config/dev?",
+            [
+              "js/console.log",
+              "|Dispatch:",
+              "event"
+            ]
+          ],
+          [
+            "match",
+            [
+              "typed/decode-control",
+              "event"
+            ],
+            [
+              [
+                ":some",
+                "action"
+              ],
+              [
+                "reset!",
+                "*reel",
+                [
+                  "typed/apply-control",
+                  "updater",
+                  "@*reel",
+                  "action"
+                ]
+              ]
+            ],
+            [
+              [
+                ":none"
+              ],
+              [
+                "reset!",
+                "*reel",
+                [
+                  "typed/record-op",
+                  "updater",
+                  "@*reel",
+                  [
+                    "types/read-app-event",
+                    "event"
+                  ],
+                  [
+                    "generate-id!"
+                  ],
+                  [
+                    ":timestamp",
+                    [
+                      "shared/date-now-snapshot"
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ],
+          "&unit"
+        ],
+        [
+          "raise",
+          "|Expected a UI event enum"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.main/dispatch!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "main!",
+      [],
+      [
+        "println",
+        "|Running_mode:",
+        [
+          "if",
+          "config/dev?",
+          "|dev",
+          "|release"
+        ]
+      ],
+      [
+        "if",
+        "config/dev?",
+        [
+          "load-console-formatter!"
+        ]
+      ],
+      [
+        "match",
+        [
+          "browser/storage-get",
+          [
+            ":storage-key",
+            "config/site"
+          ]
+        ],
+        [
+          [
+            ":some",
+            "raw"
+          ],
+          [
+            "match",
+            [
+              "app.types/decode-store",
+              [
+                "parse-cirru-edn",
+                "raw"
+              ]
+            ],
+            [
+              [
+                ":some",
+                "stored"
+              ],
+              [
+                "dispatch!",
+                [
+                  "types/app-event",
+                  [
+                    "app.types/Op",
+                    ":hydrate-storage",
+                    "stored"
+                  ]
+                ]
+              ]
+            ],
+            [
+              [
+                ":none"
+              ],
+              [
+                "do",
+                [
+                  "hud!",
+                  "|error",
+                  "|Invalid_saved_state"
+                ],
+                [
+                  "raise",
+                  "|Invalid_saved_state"
+                ]
+              ]
+            ]
+          ]
+        ],
+        [
+          [
+            ":none"
+          ],
+          "&unit"
+        ]
+      ],
+      [
+        "render-app!"
+      ],
+      [
+        "add-watch!",
+        "*reel",
+        ":changes",
+        [
+          "fn",
+          [
+            "reel",
+            "prev"
+          ],
+          [
+            "render-app!"
+          ]
+        ]
+      ],
+      [
+        "listen-devtools!",
+        "|k",
+        "dispatch!"
+      ],
+      [
+        "browser/set-before-unload!",
+        [
+          "fn",
+          [
+            "event"
+          ],
+          [
+            "persist-storage!"
+          ]
+        ]
+      ],
+      [
+        "browser/set-interval!",
+        "persist-storage!",
+        "60000"
+      ],
+      [
+        "println",
+        "|App_started."
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.main/main!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "mount-target",
+      [
+        "narrow-element",
+        [
+          ".unwrap",
+          [
+            "browser/query-selector",
+            "|.app"
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.main/mount-target",
+    "js_ffi": null,
+    "schema": "'respo.dom/DomElement",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "persist-storage!",
+      [],
+      [
+        "browser/storage-set!",
+        [
+          ":storage-key",
+          "config/site"
+        ],
+        [
+          "format-cirru-edn",
+          [
+            ":store",
+            "@*reel"
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.main/persist-storage!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "reload!",
+      [],
+      [
+        "if",
+        [
+          "nil?",
+          "build-errors"
+        ],
+        [
+          "do",
+          [
+            "remove-watch!",
+            "*reel",
+            ":changes"
+          ],
+          [
+            "clear-cache!"
+          ],
+          [
+            "add-watch!",
+            "*reel",
+            ":changes",
+            [
+              "fn",
+              [
+                "reel",
+                "prev"
+              ],
+              [
+                "render-app!"
+              ]
+            ]
+          ],
+          [
+            "reset!",
+            "*reel",
+            [
+              "typed/refresh",
+              "updater",
+              "@*reel",
+              "schema/store"
+            ]
+          ],
+          [
+            "hud!",
+            "|ok~",
+            "|Ok"
+          ]
+        ],
+        [
+          "hud!",
+          "|error",
+          "build-errors"
+        ]
+      ],
+      "&unit"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.main/reload!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "render-app!",
+      [],
+      [
+        "render!",
+        "mount-target",
+        [
+          "comp-container",
+          "@*reel"
+        ],
+        "dispatch!"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.main/render-app!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "store",
+      [
+        "app.types/Store",
+        ":states",
+        [
+          "{}"
+        ],
+        ":interacted?",
+        "false"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.schema/store",
+    "js_ffi": null,
+    "schema": "'app.types/Store",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defenum",
+      "Op",
+      [
+        ":states",
+        [
+          "::",
+          "'List",
+          "'Dynamic"
+        ],
+        "'Dynamic"
+      ],
+      [
+        ":hydrate-storage",
+        "'app.types/Store"
+      ],
+      [
+        ":interact"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.types/Op",
+    "js_ffi": null,
+    "schema": "'EnumDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "OpEnvelope",
+      [
+        ":op",
+        "'app.types/Op"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.types/OpEnvelope",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "SiteConfig",
+      [
+        ":storage-key",
+        "'String"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.types/SiteConfig",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "State",
+      [
+        ":content",
+        "'String"
+      ],
+      [
+        ":next-data",
+        "'Dynamic"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.types/State",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "Store",
+      [
+        ":states",
+        [
+          "::",
+          "'Map",
+          "'Dynamic",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":interacted?",
+        "'Bool"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.types/Store",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "app-event",
+      [
+        "op"
+      ],
+      [
+        "::",
+        ":app/event",
+        [
+          "OpEnvelope",
+          ":op",
+          "op"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.types/app-event",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Enum"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'app.types/Op"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "decode-store",
+      [
+        "data"
+      ],
+      [
+        "if",
+        [
+          "or",
+          [
+            "map?",
+            "data"
+          ],
+          [
+            "struct?",
+            "data"
+          ]
+        ],
+        [
+          "match",
+          [
+            "get",
+            "data",
+            ":states"
+          ],
+          [
+            [
+              ":some",
+              "states"
+            ],
+            [
+              "if",
+              [
+                "map?",
+                "states"
+              ],
+              [
+                "let",
+                [
+                  [
+                    "cursor-valid?",
+                    [
+                      "match",
+                      [
+                        "get",
+                        "states",
+                        ":cursor"
+                      ],
+                      [
+                        [
+                          ":some",
+                          "cursor"
+                        ],
+                        [
+                          "list?",
+                          "cursor"
+                        ]
+                      ],
+                      [
+                        [
+                          ":none"
+                        ],
+                        "true"
+                      ]
+                    ]
+                  ],
+                  [
+                    "data-valid?",
+                    [
+                      "match",
+                      [
+                        "get",
+                        "states",
+                        ":data"
+                      ],
+                      [
+                        [
+                          ":some",
+                          "state"
+                        ],
+                        [
+                          "if",
+                          [
+                            "struct?",
+                            "state"
+                          ],
+                          [
+                            "struct-match",
+                            "state",
+                            [
+                              "State",
+                              "typed-state",
+                              "true"
+                            ],
+                            [
+                              "_",
+                              "_",
+                              "false"
+                            ]
+                          ],
+                          "false"
+                        ]
+                      ],
+                      [
+                        [
+                          ":none"
+                        ],
+                        "true"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "if",
+                  [
+                    "and",
+                    "cursor-valid?",
+                    "data-valid?"
+                  ],
+                  [
+                    "Option",
+                    ":some",
+                    [
+                      "Store",
+                      ":states",
+                      [
+                        "decode-map-as",
+                        "states",
+                        [
+                          "::",
+                          "'Map",
+                          "'Dynamic",
+                          "'Dynamic"
+                        ]
+                      ],
+                      ":interacted?",
+                      "false"
+                    ]
+                  ],
+                  [
+                    "Option",
+                    ":none"
+                  ]
+                ]
+              ],
+              [
+                "Option",
+                ":none"
+              ]
+            ]
+          ],
+          [
+            [
+              ":none"
+            ],
+            [
+              "Option",
+              ":none"
+            ]
+          ]
+        ],
+        [
+          "Option",
+          ":none"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.types/decode-store",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":return",
+        [
+          "::",
+          "'Option",
+          "'app.types/Store"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "read-app-event",
+      [
+        "event"
+      ],
+      [
+        "match",
+        "event",
+        [
+          [
+            ":app/event",
+            "envelope"
+          ],
+          [
+            "if",
+            [
+              "struct?",
+              "envelope"
+            ],
+            [
+              "struct-match",
+              "envelope",
+              [
+                "OpEnvelope",
+                "checked",
+                [
+                  ":op",
+                  "checked"
+                ]
+              ],
+              [
+                "_",
+                "other",
+                [
+                  "raise",
+                  "|Expected an app OpEnvelope"
+                ]
+              ]
+            ],
+            [
+              "raise",
+              "|Expected an app OpEnvelope"
+            ]
+          ]
+        ],
+        [
+          "_",
+          [
+            "raise",
+            "|Unknown UI event; reload after upgrading the application"
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.types/read-app-event",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'app.types/Op"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Enum"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "updater",
+      [
+        "store",
+        "op",
+        "op-id",
+        "op-time"
+      ],
+      [
+        "match",
+        "op",
+        [
+          [
+            ":states",
+            "cursor",
+            "s"
+          ],
+          [
+            "assoc",
+            "store",
+            ":states",
+            [
+              "decode-map-as",
+              [
+                "update-state-tree",
+                [
+                  ":states",
+                  "store"
+                ],
+                "cursor",
+                "s"
+              ],
+              [
+                "::",
+                "'Map",
+                "'Dynamic",
+                "'Dynamic"
+              ]
+            ]
+          ]
+        ],
+        [
+          [
+            ":hydrate-storage",
+            "data"
+          ],
+          "data"
+        ],
+        [
+          [
+            ":interact"
+          ],
+          [
+            "assoc",
+            "store",
+            ":interacted?",
+            "true"
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "app.updater/updater",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'app.types/Store"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'app.types/Store",
+          "'app.types/Op",
+          "'String",
+          "'Number"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  }
+]
