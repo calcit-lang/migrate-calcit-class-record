@@ -24,8 +24,9 @@ Convert_Calcit / Convert_Compact / FileEntry 选择格式，右侧展示结果�
 `reel.util/generate-id!` 导入，保留原导入顺序；既有函数、schema 和附带测试不改。
 这不是闭合业务 Op 的证明，也不以 Dynamic 或强转掩盖实际派发边界。
 
-启动仍先恢复并检查存档，再渲染和注册保存。恢复失败时保留原文，并继续用
-JS 引入的 `hud!` 显示页面错误，不以 raise 替代。旧保护背景见 [#15](https://github.com/calcit-lang/migrate-calcit-class-record/issues/15)。
+启动仍先恢复并检查存档，再渲染和注册保存。存档解码返回 none 时保留原文，
+先用 JS 引入的 `hud!` 显示页面错误，再由既有 `raise` 中止启动；不会继续渲染、
+注册监听器或定时保存。保留 `hud!`，不以单独的 raise 替代页面错误提示。旧保护背景见 [#15](https://github.com/calcit-lang/migrate-calcit-class-record/issues/15)。
 本轮不读取真实存档、不删除数据、不操作生产；具体界面验收范围以 PR 为准。
 
 ## 开发与验证
