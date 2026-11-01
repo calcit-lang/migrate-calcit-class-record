@@ -16,12 +16,14 @@ Snapshot 所需的全部 metadata；不要因为索引项目已升级就退役�
 
 **转换会按原逻辑自动复制结果并覆盖系统剪贴板。** 页面左侧输入旧数据，按
 Convert_Calcit / Convert_Compact / FileEntry 选择格式，右侧展示结果。
+复制组件从初始页面就挂载，交互前传 nil，首次键入后转换也能触发原 update 复制；
+不在 mount 阶段复制，避免恢复旧结果时仅因刷新就覆盖剪贴板。
 
 ## 本次迁移
 
 通过官方 formatter 更新类型标注语法，为 Respo 的 `dispatch-op` 类型槽提供
 真实的开放 Enum 合同；代表值不发送，不新增业务事件包装。仅移除已经不存在的
-`reel.util/generate-id!` 导入，保留原导入顺序；既有函数、schema 和附带测试不改。
+`reel.util/generate-id!` 导入，保留原导入顺序；三个转换函数、既有 schema 和附带测试不改。
 这不是闭合业务 Op 的证明，也不以 Dynamic 或强转掩盖实际派发边界。
 
 启动仍先恢复并检查存档，再渲染和注册保存。存档解码返回 none 时保留原文，
@@ -42,7 +44,7 @@ yarn dev --host 127.0.0.1
 ```
 
 `yarn release` 只编译和构建，不执行模块发布。CI 保留 canonical、全部定义、
-完整 strict、原三格式附带测试、deprecated-call 与 dynamic-method 门禁；不放宽
+完整 strict、原三种格式的附带测试、deprecated-call 与 dynamic-method 门禁；不放宽
 断言或预算，不新增 checker / runner / concurrently。只有 `calcit.cirru` /
 `deps.cirru` 是当前工程入口，`js-out/` 和 `dist/` 不入库。
 

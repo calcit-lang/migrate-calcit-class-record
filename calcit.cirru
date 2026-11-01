@@ -96,9 +96,7 @@
                     :placeholder |data
                     :style $ {} (:white-space :pre) (:font-size 12)
                     :disabled true
-                  if (:interacted? store)
-                    comp-copy $ :next-data state
-                    span $ {}
+                  comp-copy $ if (:interacted? store) (:next-data state) nil
                 when dev? $ comp-typed-reel (>> states :reel) reel $ {}
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State app.types/Op app.types/Store) (-> respo.schema/Component)
