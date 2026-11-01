@@ -23,12 +23,15 @@ Convert_Calcit / Convert_Compact / FileEntry 选择格式，右侧展示结果�
 
 通过官方 formatter 更新类型标注语法，为 Respo 的 `dispatch-op` 类型槽提供
 真实的开放 Enum 合同；代表值不发送，不新增业务事件包装。仅移除已经不存在的
-`reel.util/generate-id!` 导入，保留原导入顺序；三个转换函数、既有 schema 和附带测试不改。
+`reel.util/generate-id!` 导入，保留原导入顺序；三个转换函数、既有 schema 和原转换附带断言不改。
 这不是闭合业务 Op 的证明，也不以 Dynamic 或强转掩盖实际派发边界。
 
 启动仍先恢复并检查存档，再渲染和注册保存。存档解码返回 none 时保留原文，
 先用 JS 引入的 `hud!` 显示页面错误，再由既有 `raise` 中止启动；不会继续渲染、
 注册监听器或定时保存。保留 `hud!`，不以单独的 raise 替代页面错误提示。旧保护背景见 [#15](https://github.com/calcit-lang/migrate-calcit-class-record/issues/15)。
+存档中的 State 经格式化/解析后不再具有本地名义来源。恢复时仅把 Struct 当作数据转为 Map，
+用正式 typed decoder 检查完整字段后构造本地 State；名称不代表身份，错误仍经 HUD 报告并中止保存注册。
+保留状态 cursor、其他状态键和既有 Map/Struct 存档格式，不清空原文。新增一项针对实测往返失败的附带回归。
 本轮不读取真实存档、不删除数据、不操作生产；具体界面验收范围以 PR 为准。
 
 ## 开发与验证
@@ -44,7 +47,7 @@ yarn dev --host 127.0.0.1
 ```
 
 `yarn release` 只编译和构建，不执行模块发布。CI 保留 canonical、全部定义、
-完整 strict、原三种格式的附带测试、deprecated-call 与 dynamic-method 门禁；不放宽
+完整 strict、原三种格式的附带测试、新 State 往返回归、deprecated-call 与 dynamic-method 门禁；不放宽
 断言或预算，不新增 checker / runner / concurrently。只有 `calcit.cirru` /
 `deps.cirru` 是当前工程入口，`js-out/` 和 `dist/` 不入库。
 

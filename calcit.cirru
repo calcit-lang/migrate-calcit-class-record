@@ -392,6 +392,17 @@
             :: :app/event $ OpEnvelope :op op
           :examples $ []
           :schema $ quote $ Fn app.types/Op (-> Enum)
+        'decode-state $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn decode-state (value)
+            if (struct? value)
+              match
+                try-decode-map-as (.to-map value) State
+                (:ok checked) (Option :some checked)
+                (:err _) (Option :none)
+              Option :none
+          :examples $ []
+          :schema $ quote $ Fn Dynamic
+            -> $ Option app.types/State
         'decode-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-store (data)
             if
@@ -403,16 +414,20 @@
                         cursor-valid? $ match (get states :cursor)
                           (:some cursor) (list? cursor)
                           (:none) true
-                        data-valid? $ match (get states :data)
+                        next-states $ match (get states :data)
                           (:some state)
-                            if (struct? state)
-                              struct-match state (State typed-state true) (_ _ false)
-                              , false
-                          (:none) true
-                      if (and cursor-valid? data-valid?)
-                        Option :some $ Store :states
-                          decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
-                          , :interacted? false
+                            match (decode-state state)
+                              (:some checked)
+                                Option :some $ assoc states :data checked
+                              (:none) (Option :none)
+                          (:none) (Option :some states)
+                      if cursor-valid?
+                        match next-states
+                          (:some checked-states)
+                            Option :some $ Store :states
+                              decode-map-as checked-states $ quote $ Map Dynamic Dynamic
+                              , :interacted? false
+                          (:none) (Option :none)
                         Option :none
                     Option :none
                 (:none) (Option :none)
@@ -420,6 +435,23 @@
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ Option app.types/Store
+          :tests $ [] $ %{} 'TestEntry (:name |serialized-state-roundtrip)
+            :code $ quote $ let
+                raw $ parse-cirru-edn $ format-cirru-edn
+                  {} $ :states $ {}
+                    :cursor $ []
+                    :data $ State :content "|0321合成🐈" :next-data nil
+                    :extra |keep
+              match (decode-store raw)
+                (:some restored)
+                  do
+                    assert= (State :content "|0321合成🐈" :next-data nil)
+                      .unwrap $ get (:states restored) :data
+                    assert= ([])
+                      .unwrap $ get (:states restored) :cursor
+                    assert= |keep $ .unwrap $ get (:states restored) :extra
+                (:none) (raise |Serialized-State-must-restore)
+            :tags $ #{} :unit
         'read-app-event $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-app-event (event)
             match event
