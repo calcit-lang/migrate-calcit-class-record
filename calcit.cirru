@@ -11,28 +11,32 @@
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'CodeEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct CodeEntry (:doc 'String) (:code 'Dynamic)
+          :code $ quote $ defstruct CodeEntry (:doc String) (:code Dynamic)
           :examples $ []
           :schema $ quote StructDef
+        'CodeNode $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion CodeNode app.comp.container/Expr app.comp.container/Leaf
+          :examples $ []
+          :schema $ quote UnionDef
         'Expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Expr
             :data $ quote $ Map Dynamic Dynamic
-            :by 'Dynamic
-            :at 'Dynamic
+            :by Dynamic
+            :at Dynamic
           :examples $ []
           :schema $ quote StructDef
         'FileEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct FileEntry (:ns 'Dynamic) (:defs 'Dynamic)
+          :code $ quote $ defstruct FileEntry (:ns Dynamic) (:defs Dynamic)
           :examples $ []
           :schema $ quote StructDef
         'Leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Leaf (:by 'Dynamic) (:at 'Dynamic) (:text 'Dynamic)
+          :code $ quote $ defstruct Leaf (:by Dynamic) (:at Dynamic) (:text Dynamic)
           :examples $ []
           :schema $ quote StructDef
         'as-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-map (data)
             if (map? data)
-              decode-map-as data $ :: 'Map 'Dynamic 'Dynamic
+              decode-map-as data $ quote $ Map Dynamic Dynamic
               raise |Expected_map
           :examples $ []
           :schema $ quote $ Fn Dynamic
@@ -44,7 +48,7 @@
                 states $ :states store
                 cursor $ match (get states :cursor)
                   (:some value)
-                    decode-map-as value $ :: 'List 'Dynamic
+                    decode-map-as value $ quote $ List Dynamic
                   (:none) ([])
                 state $ match (get states :data)
                   (:some value)
@@ -97,7 +101,9 @@
                     :style $ {} (:white-space :pre) (:font-size 12)
                     :disabled true
                   comp-copy $ if (:interacted? store) (:next-data state) nil
-                when dev? $ comp-typed-reel (>> states :reel) reel $ {}
+                if dev?
+                  Option :some $ comp-typed-reel (>> states :reel) reel $ {}
+                  Option :none
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State app.types/Op app.types/Store) (-> respo.schema/Component)
         'comp-copy $ %{} 'CodeEntry (:doc |)
@@ -141,7 +147,7 @@
                     .unwrap-or (get source :at) nil
                     , :text $ .unwrap-or (get source :text) nil
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Dynamic)
+          :schema $ quote $ Fn Dynamic (-> app.comp.container/CodeNode)
         'transform-compact $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-compact (data)
             let
@@ -364,27 +370,27 @@
           :code $ quote $ defenum Op
             :states
               quote $ List Dynamic
-              , 'Dynamic
-            :hydrate-storage 'app.types/Store
+              , Dynamic
+            :hydrate-storage app.types/Store
             :interact
           :examples $ []
           :schema $ quote EnumDef
         'OpEnvelope $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct OpEnvelope (:op 'app.types/Op)
+          :code $ quote $ defstruct OpEnvelope (:op app.types/Op)
           :examples $ []
           :schema $ quote StructDef
         'SiteConfig $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct SiteConfig (:storage-key 'String)
+          :code $ quote $ defstruct SiteConfig (:storage-key String)
           :examples $ []
           :schema $ quote StructDef
         'State $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct State (:content 'String) (:next-data 'Dynamic)
+          :code $ quote $ defstruct State (:content String) (:next-data Dynamic)
           :examples $ []
           :schema $ quote StructDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :states $ quote $ Map Dynamic Dynamic
-            :interacted? 'Bool
+            :interacted? Bool
           :examples $ []
           :schema $ quote StructDef
         'app-event $ %{} 'CodeEntry (:doc |)
@@ -474,7 +480,7 @@
               (:states cursor s)
                 assoc store :states $ decode-map-as
                   update-state-tree (:states store) cursor s
-                  :: 'Map 'Dynamic 'Dynamic
+                  quote $ Map Dynamic Dynamic
               (:hydrate-storage data) data
               (:interact) (assoc store :interacted? true)
           :examples $ []
