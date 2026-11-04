@@ -5,9 +5,13 @@ http://repo.calcit-lang.org/migrate-calcit-class-record/ 。
 
 ## 使用者需要注意
 
-本项目配对 Calcit / JavaScript runtime **0.34.1**，使用正式 Reel **0.8.0**、UI **0.12.0**、Respo **0.18.0**、JS FFI **0.2.9**，传递 Router **0.10.0**。升级后重新严格安装依赖、生成 JS 并刷新页面。
+本项目配对 Calcit / JavaScript runtime **0.34.2**，使用正式 Reel **0.8.1**、UI **0.12.1**、Respo **0.18.1**、JS FFI **0.2.9**，传递 Router **0.10.1**。升级后重新严格安装依赖、生成 JS 并刷新页面。
 
 `transform-code` 的返回值声明为 `CodeNode` union，成员为本地 Expr 和 Leaf。读取历史输入时继续保留扩展字段、缺失值和显式 nil 的原行为。UI 基础样式可能随依赖升级变化。
+
+表达式的子节点现在也声明为 `Map Dynamic CodeNode`，递归复用同一 union，
+不再把已转换的子节点退回 Dynamic。Map 的异构 key，以及历史 `by` / `at` / `text`
+字段仍保持开放，不因此拒绝旧输入。此处只收紧转换后节点的类型，输出格式不变。
 
 三个转换按钮及输出布局保持：保留额外 root 字段、缺失字段和显式 nil 的旧行为，
 必需 Map 缺失仍失败。它不会读取或覆盖磁盘项目文件，也不保证输出具备当前
@@ -35,7 +39,7 @@ Convert_Calcit / Convert_Compact / FileEntry 选择格式，右侧展示结果�
 
 ## 开发与验证
 
-需要 Node.js 24、Yarn 4.18.0、官方 Calcit 0.32.1 和 Caps 0.1.1：
+需要 Node.js 24、Yarn 4.18.0、官方 Calcit 0.34.2 和 Caps 0.1.1：
 
 ```bash
 caps --strict --ci
