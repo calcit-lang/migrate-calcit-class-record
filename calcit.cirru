@@ -20,7 +20,7 @@
           :schema $ quote UnionDef
         'Expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Expr
-            :data $ quote $ Map Dynamic Dynamic
+            :data $ quote $ Map Dynamic app.comp.container/CodeNode
             :by Dynamic
             :at Dynamic
           :examples $ []
@@ -139,7 +139,7 @@
                     , :data $ filter-map-kv
                       as-map $ .unwrap-or (get source :data) nil
                       fn (k v)
-                        hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
+                        hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic app.comp.container/CodeNode)
                         MapEntryDecision :keep k $ transform-code v
                 Leaf :by
                   .unwrap-or (get source :by) nil
