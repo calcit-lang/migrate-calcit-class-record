@@ -5,7 +5,7 @@ http://repo.calcit-lang.org/migrate-calcit-class-record/ 。
 
 ## 使用者需要注意
 
-本项目配对 Calcit / JavaScript runtime **0.34.2**，使用正式 Reel **0.8.1**、UI **0.12.1**、Respo **0.18.1**、JS FFI **0.2.9**，传递 Router **0.10.1**。升级后重新严格安装依赖、生成 JS 并刷新页面。
+本项目配对 Calcit / JavaScript runtime **0.35.1**，使用正式 Reel **0.9.2**、UI **0.15.1**、Respo **0.19.4**、JS FFI **0.2.13**，传递 Router **0.12.1**。升级后重新严格安装依赖、生成 JS 并刷新页面。
 
 `transform-code` 的返回值声明为 `CodeNode` union，成员为本地 Expr 和 Leaf。读取历史输入时继续保留扩展字段、缺失值和显式 nil 的原行为。UI 基础样式可能随依赖升级变化。
 
@@ -24,6 +24,8 @@ Convert_Calcit / Convert_Compact / FileEntry 选择格式，右侧展示结果�
 
 ## 本次迁移
 
+组件状态游标使用 Respo 的 `CoordKey`，状态操作携带本地 `State`。存档中游标元素无效时沿用原恢复失败提示，保留原文。历史输入和输出仍保留异构字段。
+
 通过官方 formatter 更新类型标注语法，为 Respo 的 `dispatch-op` 类型槽提供
 真实的开放 Enum 合同；代表值不发送，不新增业务事件包装。仅移除已经不存在的
 `reel.util/generate-id!` 导入，保留原导入顺序；三个转换函数、既有 schema 和原转换附带断言不改。
@@ -39,7 +41,7 @@ Convert_Calcit / Convert_Compact / FileEntry 选择格式，右侧展示结果�
 
 ## 开发与验证
 
-需要 Node.js 24、Yarn 4.18.0、官方 Calcit 0.34.2 和 Caps 0.1.1：
+需要 Node.js 24、Yarn 4.18.0、官方 Calcit 0.35.1 和 Caps 0.1.1：
 
 ```bash
 caps --strict --ci

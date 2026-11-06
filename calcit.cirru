@@ -20,7 +20,7 @@
           :schema $ quote UnionDef
         'Expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Expr
-            :data $ quote $ Map Dynamic app.comp.container/CodeNode
+            :data $ Map Dynamic app.comp.container/CodeNode
             :by Dynamic
             :at Dynamic
           :examples $ []
@@ -36,7 +36,7 @@
         'as-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-map (data)
             if (map? data)
-              decode-map-as data $ quote $ Map Dynamic Dynamic
+              decode-map-as data $ Map Dynamic Dynamic
               raise |Expected_map
           :examples $ []
           :schema $ quote $ Fn Dynamic
@@ -48,7 +48,7 @@
                 states $ :states store
                 cursor $ match (get states :cursor)
                   (:some value)
-                    decode-map-as value $ quote $ List Dynamic
+                    decode-map-as value $ List respo.schema/CoordKey
                   (:none) ([])
                 state $ match (get states :data)
                   (:some value)
@@ -66,15 +66,16 @@
                   :class-name $ str-spaced css/expand css/textarea css/font-code!
                   :style $ {} (:white-space :pre) (:font-size 12)
                   :on-input $ fn (e d!)
+                    hint-fn $ Fn respo.schema/RespoEvent
+                      Fn AnyEnum $ -> Unit
+                      -> Unit
                     d! $ types/app-event $ app.types/Op :states cursor
-                      assoc state :content $ decode-map-as
-                        .unwrap-or (get e :value) nil
-                        , 'String
+                      assoc state :content $ decode-map-as (:value e) 'String
                   :on $ {} $ :paste
                     fn (e d!)
                       d! $ types/app-event $ app.types/Op :states cursor (assoc state :next-data nil)
                       d! $ types/app-event $ app.types/Op :interact
-                =< 2 0
+                space-x 2
                 div
                   {} $ :class-name $ str-spaced css/column css/expand
                   div ({})
@@ -83,13 +84,13 @@
                         d! $ types/app-event $ app.types/Op :states cursor
                           assoc state :next-data $ transform-snapshot $ parse-cirru-edn (:content state)
                         d! $ types/app-event $ app.types/Op :interact
-                    =< 8 0
+                    space-x 8
                     button $ {} (:class-name css/button) (:inner-text |Convert_Compact)
                       :on-click $ fn (e d!)
                         d! $ types/app-event $ app.types/Op :states cursor
                           assoc state :next-data $ transform-compact $ parse-cirru-edn (:content state)
                         d! $ types/app-event $ app.types/Op :interact
-                    =< 8 0
+                    space-x 8
                     button $ {} (:class-name css/button) (:inner-text |FileEntry)
                       :on-click $ fn (e d!)
                         d! $ types/app-event $ app.types/Op :states cursor
@@ -243,7 +244,7 @@
         :code $ quote $ ns app.comp.container
           :require (respo-ui.core :as ui)
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-x
             reel.comp.reel :refer $ comp-typed-reel
             app.config :refer $ dev?
             respo-ui.css :as css
@@ -283,7 +284,7 @@
                 , &unit
               raise "|Expected a UI event enum"
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println |Running_mode: $ if config/dev? |dev |release
@@ -365,12 +366,10 @@
           :doc "|Open Enum alias for Respo dispatch-op. The representative value is not dispatched. Existing app/event envelopes and anonymous Reel controls retain their runtime decoding and payloads."
           :code $ quote $ def DispatchOp (:: :unhandled)
           :examples $ []
-          :schema $ quote Enum
+          :schema $ quote AnyEnum
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states
-              quote $ List Dynamic
-              , Dynamic
+            :states (List respo.schema/CoordKey) app.types/State
             :hydrate-storage app.types/Store
             :interact
           :examples $ []
@@ -389,7 +388,7 @@
           :schema $ quote StructDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
-            :states $ quote $ Map Dynamic Dynamic
+            :states $ Map Dynamic Dynamic
             :interacted? Bool
           :examples $ []
           :schema $ quote StructDef
@@ -397,7 +396,7 @@
           :code $ quote $ defn app-event (op)
             :: :app/event $ OpEnvelope :op op
           :examples $ []
-          :schema $ quote $ Fn app.types/Op (-> Enum)
+          :schema $ quote $ Fn app.types/Op (-> AnyEnum)
         'decode-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-state (value)
             if (struct? value)
@@ -418,7 +417,11 @@
                   if (map? states)
                     let
                         cursor-valid? $ match (get states :cursor)
-                          (:some cursor) (list? cursor)
+                          (:some cursor)
+                            match
+                              try-decode-map-as cursor $ List respo.schema/CoordKey
+                              (:ok _) true
+                              (:err _) false
                           (:none) true
                         next-states $ match (get states :data)
                           (:some state)
@@ -431,7 +434,7 @@
                         match next-states
                           (:some checked-states)
                             Option :some $ Store :states
-                              decode-map-as checked-states $ quote $ Map Dynamic Dynamic
+                              decode-map-as checked-states $ Map Dynamic Dynamic
                               , :interacted? false
                           (:none) (Option :none)
                         Option :none
@@ -469,7 +472,7 @@
                   raise "|Expected an app OpEnvelope"
               _ $ raise "|Unknown UI event; reload after upgrading the application"
           :examples $ []
-          :schema $ quote $ Fn Enum (-> app.types/Op)
+          :schema $ quote $ Fn AnyEnum (-> app.types/Op)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.types
     'app.updater $ %{} 'FileEntry
@@ -480,7 +483,7 @@
               (:states cursor s)
                 assoc store :states $ decode-map-as
                   update-state-tree (:states store) cursor s
-                  quote $ Map Dynamic Dynamic
+                  Map Dynamic Dynamic
               (:hydrate-storage data) data
               (:interact) (assoc store :interacted? true)
           :examples $ []
