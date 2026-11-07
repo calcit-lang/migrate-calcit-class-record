@@ -228,14 +228,17 @@
               let
                   leaf $ {} (:type :leaf) (:text |name)
                   expected-leaf $ Leaf :by nil :at nil :text |name
+                  expr $ {} (:type :expr)
+                    :data $ {} $ 0 leaf
+                  expected-expr $ Expr :by nil :at nil :data $ {} (0 expected-leaf)
                   input $ {} (:extra |keep)
                     :ir $ {} (:package |demo)
                       :files $ {} $ |demo.main
-                        {} (:ns leaf)
+                        {} (:ns expr)
                           :defs $ {} $ |main leaf
                   expected $ {} (:extra |keep) (:package |demo)
                     :files $ {} $ |demo.main
-                      FileEntry :ns (CodeEntry :doc | :code expected-leaf) :defs $ {} $ |main (CodeEntry :doc | :code expected-leaf)
+                      FileEntry :ns (CodeEntry :doc | :code expected-expr) :defs $ {} $ |main (CodeEntry :doc | :code expected-leaf)
                 assert= (format-cirru-edn expected)
                   format-cirru-edn $ transform-snapshot input
               let
