@@ -6,12 +6,12 @@
     {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
-      :type-slots $ {} $ :dispatch-op |app.types/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'app.types/DispatchOp
   :files $ {}
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'CodeEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct CodeEntry (:doc String) (:code Dynamic)
+          :code $ quote $ defstruct CodeEntry ([] Code) (:doc String) (:code Code)
           :examples $ []
           :schema $ quote StructDef
         'CodeNode $ %{} 'CodeEntry (:doc |)
@@ -26,7 +26,7 @@
           :examples $ []
           :schema $ quote StructDef
         'FileEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct FileEntry (:ns Dynamic) (:defs Dynamic)
+          :code $ quote $ defstruct FileEntry ([] Namespace Definitions) (:ns Namespace) (:defs Definitions)
           :examples $ []
           :schema $ quote StructDef
         'Leaf $ %{} 'CodeEntry (:doc |)
@@ -125,45 +125,58 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> respo.schema/Effect) (:features :js-ffi)
+        'map-field $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn map-field (source key)
+            match (get source key)
+              (:some value) (as-map value)
+              (:none) (raise |Expected_map)
+          :examples $ []
+          :schema $ quote $ Fn (Map Dynamic Dynamic) Tag
+            -> $ Map Dynamic Dynamic
         'transform-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-code (expr)
             let
-                source $ as-map expr
-                node-type $ .unwrap-or (get source :type) nil
-              if
-                and (tag? node-type)
-                  = (decode-map-as node-type 'Tag) :expr
+                source $ &merge
+                  {} (:by nil) (:at nil) (:text nil)
+                  as-map expr
+                expr? $ match (get source :type)
+                  (:some kind)
+                    and (tag? kind)
+                      = (decode-map-as kind 'Tag) :expr
+                  (:none) false
+              if expr?
                 Expr :by
-                  .unwrap-or (get source :by) nil
+                  .unwrap $ get source :by
                   , :at
-                    .unwrap-or (get source :at) nil
-                    , :data $ filter-map-kv
-                      as-map $ .unwrap-or (get source :data) nil
+                    .unwrap $ get source :at
+                    , :data $ filter-map-kv (map-field source :data)
                       fn (k v)
                         hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic app.comp.container/CodeNode)
                         MapEntryDecision :keep k $ transform-code v
                 Leaf :by
-                  .unwrap-or (get source :by) nil
+                  .unwrap $ get source :by
                   , :at
-                    .unwrap-or (get source :at) nil
-                    , :text $ .unwrap-or (get source :text) nil
+                    .unwrap $ get source :at
+                    , :text $ .unwrap $ get source :text
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> app.comp.container/CodeNode)
         'transform-compact $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-compact (data)
             let
                 root $ as-map data
-                files $ as-map $ .unwrap-or (get root :files) nil
+                files $ map-field root :files
               assoc root :files $ filter-map-kv files $ fn (k file)
                 hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
                 let
-                    file-map $ as-map file
-                    defs $ as-map $ .unwrap-or (get file-map :defs) nil
+                    file-map $ &merge
+                      {} $ :ns nil
+                      as-map file
+                    defs $ map-field file-map :defs
                     next-defs $ filter-map-kv defs $ fn (def-name code)
                       hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
                       MapEntryDecision :keep def-name $ CodeEntry :doc | :code code
                   MapEntryDecision :keep k $ assoc
-                    assoc file-map :ns $ CodeEntry :doc | :code $ .unwrap-or (get file-map :ns) nil
+                    assoc file-map :ns $ CodeEntry :doc | :code $ .unwrap (get file-map :ns)
                     , :defs next-defs
           :examples $ []
           :schema $ quote $ Fn Dynamic
@@ -172,14 +185,16 @@
           :code $ quote $ defn transform-file-entry (snapshot)
             let
                 root $ as-map snapshot
-                files $ as-map $ .unwrap-or (get root :files) nil
+                files $ map-field root :files
               assoc root :files $ filter-map-kv files $ fn (k file)
                 hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
                 let
-                    file-map $ as-map file
+                    file-map $ &merge
+                      {} (:ns nil) (:defs nil)
+                      as-map file
                   MapEntryDecision :keep k $ FileEntry :ns
-                    .unwrap-or (get file-map :ns) nil
-                    , :defs $ .unwrap-or (get file-map :defs) nil
+                    .unwrap $ get file-map :ns
+                    , :defs $ .unwrap (get file-map :defs)
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ Map Dynamic Dynamic
@@ -187,21 +202,23 @@
           :code $ quote $ defn transform-snapshot (snapshot)
             let
                 root $ as-map snapshot
-                ir $ as-map $ .unwrap-or (get root :ir) nil
-                files $ as-map $ .unwrap-or (get ir :files) nil
+                ir $ &merge
+                  {} $ :package nil
+                  map-field root :ir
+                files $ map-field ir :files
                 next-files $ filter-map-kv files $ fn (k file)
                   hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
                   let
                       file-map $ as-map file
-                      defs $ as-map $ .unwrap-or (get file-map :defs) nil
+                      defs $ map-field file-map :defs
                       next-defs $ filter-map-kv defs $ fn (def-name code)
                         hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
                         MapEntryDecision :keep def-name $ CodeEntry :doc | :code $ transform-code code
                     MapEntryDecision :keep k $ FileEntry :ns
-                      CodeEntry :doc | :code $ transform-code $ .unwrap-or (get file-map :ns) nil
+                      CodeEntry :doc | :code $ transform-code $ map-field file-map :ns
                       , :defs next-defs
               assoc
-                assoc (dissoc root :ir) :package $ .unwrap-or (get ir :package) nil
+                assoc (dissoc root :ir) :package $ .unwrap $ get ir :package
                 , :files next-files
           :examples $ []
           :schema $ quote $ Fn Dynamic
@@ -211,14 +228,17 @@
               let
                   leaf $ {} (:type :leaf) (:text |name)
                   expected-leaf $ Leaf :by nil :at nil :text |name
+                  expr $ {} (:type :expr)
+                    :data $ {} $ 0 leaf
+                  expected-expr $ Expr :by nil :at nil :data $ {} (0 expected-leaf)
                   input $ {} (:extra |keep)
                     :ir $ {} (:package |demo)
                       :files $ {} $ |demo.main
-                        {} (:ns leaf)
+                        {} (:ns expr)
                           :defs $ {} $ |main leaf
                   expected $ {} (:extra |keep) (:package |demo)
                     :files $ {} $ |demo.main
-                      FileEntry :ns (CodeEntry :doc | :code expected-leaf) :defs $ {} $ |main (CodeEntry :doc | :code expected-leaf)
+                      FileEntry :ns (CodeEntry :doc | :code expected-expr) :defs $ {} $ |main (CodeEntry :doc | :code expected-leaf)
                 assert= (format-cirru-edn expected)
                   format-cirru-edn $ transform-snapshot input
               let
