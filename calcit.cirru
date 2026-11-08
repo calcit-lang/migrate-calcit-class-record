@@ -67,35 +67,35 @@
                   :style $ {} (:white-space :pre) (:font-size 12)
                   :on-input $ fn (e d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn AnyEnum $ -> Unit
+                      Fn app.types/Op $ -> Unit
                       -> Unit
-                    d! $ types/app-event $ app.types/Op :states cursor
-                      assoc state :content $ decode-map-as (:value e) 'String
+                    d! $ app.types/Op :states cursor $ assoc state :content
+                      decode-map-as (:value e) 'String
                   :on $ {} $ :paste
                     fn (e d!)
-                      d! $ types/app-event $ app.types/Op :states cursor (assoc state :next-data nil)
-                      d! $ types/app-event $ app.types/Op :interact
+                      d! $ app.types/Op :states cursor $ assoc state :next-data nil
+                      d! $ app.types/Op :interact
                 space-x 2
                 div
                   {} $ :class-name $ str-spaced css/column css/expand
                   div ({})
                     button $ {} (:class-name css/button) (:inner-text |Convert_Calcit)
                       :on-click $ fn (e d!)
-                        d! $ types/app-event $ app.types/Op :states cursor
-                          assoc state :next-data $ transform-snapshot $ parse-cirru-edn (:content state)
-                        d! $ types/app-event $ app.types/Op :interact
+                        d! $ app.types/Op :states cursor $ assoc state :next-data
+                          transform-snapshot $ parse-cirru-edn $ :content state
+                        d! $ app.types/Op :interact
                     space-x 8
                     button $ {} (:class-name css/button) (:inner-text |Convert_Compact)
                       :on-click $ fn (e d!)
-                        d! $ types/app-event $ app.types/Op :states cursor
-                          assoc state :next-data $ transform-compact $ parse-cirru-edn (:content state)
-                        d! $ types/app-event $ app.types/Op :interact
+                        d! $ app.types/Op :states cursor $ assoc state :next-data
+                          transform-compact $ parse-cirru-edn $ :content state
+                        d! $ app.types/Op :interact
                     space-x 8
                     button $ {} (:class-name css/button) (:inner-text |FileEntry)
                       :on-click $ fn (e d!)
-                        d! $ types/app-event $ app.types/Op :states cursor
-                          assoc state :next-data $ transform-file-entry $ parse-cirru-edn (:content state)
-                        d! $ types/app-event $ app.types/Op :interact
+                        d! $ app.types/Op :states cursor $ assoc state :next-data
+                          transform-file-entry $ parse-cirru-edn $ :content state
+                        d! $ app.types/Op :interact
                   textarea $ {} (:value display-text)
                     :class-name $ str-spaced css/expand css/textarea css/font-code!
                     :placeholder |data
@@ -291,17 +291,26 @@
           :examples $ []
           :schema $ quote $ Ref (reel.typed/State app.types/Op app.types/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch! (event)
+          :code $ quote $ defn dispatch! (op)
+            when config/dev? $ js/console.log |Dispatch: op
+            reset! *reel $ match op
+              (reel.typed/Control control) (typed/apply-control updater @*reel control)
+              (app.types/Op action)
+                typed/record-op updater @*reel action (generate-id!)
+                  :timestamp $ shared/date-now-snapshot
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn app.types/ResolvedOp (-> Unit) (:features :js-ffi)
+        'dispatch-event! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn dispatch-event! (event)
             if (enum? event)
-              do
-                when config/dev? $ js/console.log |Dispatch: event
+              if
+                = (enum-definition event) (Option :some app.types/Op)
+                dispatch! $ decode-map-as event app.types/Op
                 match (typed/decode-control event)
-                  (:some action)
-                    reset! *reel $ typed/apply-control updater @*reel action
+                  (:some control) (dispatch! control)
                   (:none)
-                    reset! *reel $ typed/record-op updater @*reel (types/read-app-event event) (generate-id!)
-                      :timestamp $ shared/date-now-snapshot
-                , &unit
+                    dispatch! $ types/read-app-event event
               raise "|Expected a UI event enum"
           :examples $ []
           :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
@@ -315,13 +324,13 @@
                 match
                   app.types/decode-store $ parse-cirru-edn raw
                   (:some stored)
-                    dispatch! $ types/app-event $ app.types/Op :hydrate-storage stored
+                    dispatch! $ app.types/Op :hydrate-storage stored
                   (:none)
                     do (hud! |error |Invalid_saved_state) (raise |Invalid_saved_state)
               (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel prev) (render-app!)
-            listen-devtools! |k dispatch!
+            listen-devtools-toggle! |k $ fn () $ dispatch! (reel.typed/Control :toggle)
             browser/set-before-unload! $ fn (event) (persist-storage!)
             browser/set-interval! persist-storage! 60000
             println |App_started.
@@ -351,17 +360,19 @@
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! mount-target (comp-container @*reel) dispatch!
+            render-with! mount-target
+              fn () $ comp-container @*reel
+              , dispatch-event!
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
-            respo.core :refer $ render! clear-cache!
+            respo.core :refer $ render-with! clear-cache!
             app.comp.container :refer $ comp-container
             app.updater :refer $ updater
             app.schema :as schema
-            reel.util :refer $ listen-devtools!
+            reel.util :refer $ listen-devtools-toggle!
             app.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
@@ -398,6 +409,10 @@
           :code $ quote $ defstruct OpEnvelope (:op app.types/Op)
           :examples $ []
           :schema $ quote StructDef
+        'ResolvedOp $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ResolvedOp app.types/Op reel.typed/Control
+          :examples $ []
+          :schema $ quote UnionDef
         'SiteConfig $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct SiteConfig (:storage-key String)
           :examples $ []
@@ -412,11 +427,6 @@
             :interacted? Bool
           :examples $ []
           :schema $ quote StructDef
-        'app-event $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn app-event (op)
-            :: :app/event $ OpEnvelope :op op
-          :examples $ []
-          :schema $ quote $ Fn app.types/Op (-> AnyEnum)
         'decode-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-state (value)
             if (struct? value)

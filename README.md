@@ -5,7 +5,7 @@ http://repo.calcit-lang.org/migrate-calcit-class-record/ 。
 
 ## 使用者需要注意
 
-本项目配对 Calcit / JavaScript runtime **0.37.0**，使用正式 Reel **0.10.0**、UI **0.15.2**、Respo **0.19.5**、JS FFI **0.2.13**，传递 Router **0.12.2**。升级后重新严格安装依赖、生成 JS 并刷新页面。
+本项目配对 Calcit / JavaScript runtime **0.38.0**，使用正式 Reel **0.10.0**、UI **0.15.2**、Respo **0.19.5**、JS FFI **0.2.13**，传递 Router **0.12.2**。升级后重新严格安装依赖、生成 JS 并刷新页面。
 
 `transform-code` 的返回值声明为 `CodeNode` union，成员为本地 Expr 和 Leaf。读取历史输入时继续保留扩展字段、缺失值和显式 nil 的原行为。UI 基础样式可能随依赖升级变化。
 
@@ -26,10 +26,10 @@ Convert_Calcit / Convert_Compact / FileEntry 选择格式，右侧展示结果�
 
 组件状态游标使用 Respo 的 `CoordKey`，状态操作携带本地 `State`。存档中游标元素无效时沿用原恢复失败提示，保留原文。历史输入和输出仍保留异构字段。
 
-通过官方 formatter 更新类型标注语法，为 Respo 的 `dispatch-op` 类型槽提供
-真实的开放 Enum 合同；代表值不发送，不新增业务事件包装。仅移除已经不存在的
-`reel.util/generate-id!` 导入，保留原导入顺序；三个转换函数、既有 schema 和原转换附带断言不改。
-这不是闭合业务 Op 的证明，也不以 Dynamic 或强转掩盖实际派发边界。
+输入、粘贴和转换按钮直接发送具名 `Op`，Reel 快捷键直接发送具名 `Control`。
+内部派发用 `Op | reel.typed/Control` 区分应用操作和回放操作。
+Respo 入口仍接收开放 Enum，以兼容旧 `:app/event` 和 Reel 控制事件，并在进入内部派发前解码。
+组件树通过 `render-with!` 构建，为 Reel 列表提供 Respo 要求的 memo 帧。
 
 启动仍先恢复并检查存档，再渲染和注册保存。存档解码返回 none 时保留原文，
 先用 JS 引入的 `hud!` 显示页面错误，再由既有 `raise` 中止启动；不会继续渲染、
@@ -41,7 +41,7 @@ Convert_Calcit / Convert_Compact / FileEntry 选择格式，右侧展示结果�
 
 ## 开发与验证
 
-需要 Node.js 24、Yarn 4.18.0、官方 Calcit 0.37.0 和 Caps 0.1.1：
+需要 Node.js 24、Yarn 4.18.0、官方 Calcit 0.38.0 和 Caps 0.1.1：
 
 ```bash
 caps --strict --ci
