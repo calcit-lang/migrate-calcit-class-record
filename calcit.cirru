@@ -6,7 +6,7 @@
     {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
-      :type-slots $ {} $ :dispatch-op 'app.types/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'app.types/Op
   :files $ {}
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
@@ -42,7 +42,7 @@
           :schema $ quote $ Fn Dynamic
             -> $ Map Dynamic Dynamic
         'comp-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-container (reel)
+          :code $ quote $ defcomp comp-container (reel on-control)
             let
                 store $ :store reel
                 states $ :states store
@@ -103,10 +103,12 @@
                     :disabled true
                   comp-copy $ if (:interacted? store) (:next-data state) nil
                 if dev?
-                  Option :some $ comp-typed-reel (>> states :reel) reel $ {}
+                  Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control
                   Option :none
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State app.types/Op app.types/Store) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State app.types/Op app.types/Store)
+            Fn reel.typed/Control $ -> Unit
+            -> respo.schema/Component
         'comp-copy $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-copy (data)
             [] (effect-copy data)
@@ -302,18 +304,9 @@
           :examples $ []
           :schema $ quote $ Fn app.types/ResolvedOp (-> Unit) (:features :js-ffi)
         'dispatch-event! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch-event! (event)
-            if (enum? event)
-              if
-                = (enum-definition event) (Option :some app.types/Op)
-                dispatch! $ decode-map-as event app.types/Op
-                match (typed/decode-control event)
-                  (:some control) (dispatch! control)
-                  (:none)
-                    dispatch! $ types/read-app-event event
-              raise "|Expected a UI event enum"
+          :code $ quote $ defn dispatch-event! (op) (dispatch! op)
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn app.types/Op (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println |Running_mode: $ if config/dev? |dev |release
@@ -330,7 +323,7 @@
               (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel prev) (render-app!)
-            listen-devtools-toggle! |k $ fn () $ dispatch! (reel.typed/Control :toggle)
+            listen-devtools! |k on-control!
             browser/set-before-unload! $ fn (event) (persist-storage!)
             browser/set-interval! persist-storage! 60000
             println |App_started.
@@ -341,6 +334,10 @@
             narrow-element $ .unwrap $ browser/query-selector |.app
           :examples $ []
           :schema $ quote respo.dom/DomElement
+        'on-control! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-control! (control) (dispatch! control)
+          :examples $ []
+          :schema $ quote $ Fn reel.typed/Control (-> Unit)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set! (:storage-key config/site)
@@ -361,7 +358,7 @@
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! mount-target
-              fn () $ comp-container @*reel
+              fn () $ comp-container @*reel on-control!
               , dispatch-event!
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
@@ -372,14 +369,13 @@
             app.comp.container :refer $ comp-container
             app.updater :refer $ updater
             app.schema :as schema
-            reel.util :refer $ listen-devtools-toggle!
+            reel.util :refer $ listen-devtools!
             app.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
             reel.typed :as typed
             js-ffi.browser :as browser
             js-ffi.shared :as shared
-            app.types :as types
             respo.ffi.browser :refer $ narrow-element
     'app.schema $ %{} 'FileEntry
       :defs $ {} $ 'store
@@ -393,11 +389,6 @@
           :require $ app.types :refer $ Store
     'app.types $ %{} 'FileEntry
       :defs $ {}
-        'DispatchOp $ %{} 'CodeEntry
-          :doc "|Open Enum alias for Respo dispatch-op. The representative value is not dispatched. Existing app/event envelopes and anonymous Reel controls retain their runtime decoding and payloads."
-          :code $ quote $ def DispatchOp (:: :unhandled)
-          :examples $ []
-          :schema $ quote AnyEnum
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states (List respo.schema/CoordKey) app.types/State
@@ -405,10 +396,6 @@
             :interact
           :examples $ []
           :schema $ quote EnumDef
-        'OpEnvelope $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct OpEnvelope (:op app.types/Op)
-          :examples $ []
-          :schema $ quote StructDef
         'ResolvedOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion ResolvedOp app.types/Op reel.typed/Control
           :examples $ []
@@ -491,18 +478,6 @@
                     assert= |keep $ .unwrap $ get (:states restored) :extra
                 (:none) (raise |Serialized-State-must-restore)
             :tags $ #{} :unit
-        'read-app-event $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn read-app-event (event)
-            match event
-              (:app/event envelope)
-                if (struct? envelope)
-                  struct-match envelope
-                    OpEnvelope checked $ :op checked
-                    _ other $ raise "|Expected an app OpEnvelope"
-                  raise "|Expected an app OpEnvelope"
-              _ $ raise "|Unknown UI event; reload after upgrading the application"
-          :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> app.types/Op)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.types
     'app.updater $ %{} 'FileEntry
