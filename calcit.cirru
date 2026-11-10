@@ -101,7 +101,11 @@
                     :placeholder |data
                     :style $ {} (:white-space :pre) (:font-size 12)
                     :disabled true
-                  comp-copy $ if (:interacted? store) (:next-data state) nil
+                  comp-copy $ if
+                    and (:interacted? store)
+                      non-nil? $ :next-data state
+                    Option :some display-text
+                    Option :none
                 if dev?
                   Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control
                   Option :none
@@ -110,23 +114,25 @@
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
         'comp-copy $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-copy (data)
-            [] (effect-copy data)
+          :code $ quote $ defcomp comp-copy (text)
+            [] (effect-copy text)
               span $ {}
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
+          :schema $ quote $ Fn (Option String) (-> respo.schema/Component)
         'effect-copy $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defeffect effect-copy (data) (action el at?)
-            println "|Copy Effect:" action $ non-nil? data
-            if (= action :update)
-              if (non-nil? data)
-                let
-                    text $ format-cirru-edn data
-                  copy! text
-                  println |Copied! $ .len text
-            , &unit
+          :code $ quote $ defeffect effect-copy (raw-content) (action el at?)
+            let
+                content $ decode-map-as raw-content $ Option String
+              println "|Copy Effect:" action $ .some? content
+              when (= action :update)
+                match content
+                  (:some text)
+                    do (copy! text)
+                      println |Copied! $ .len text
+                  (:none) &unit
+              , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/Effect) (:features :js-ffi)
+          :schema $ quote $ Fn (Option String) (-> respo.schema/Effect) (:features :js-ffi)
         'map-field $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn map-field (source key)
             match (get source key)
@@ -418,7 +424,7 @@
           :code $ quote $ defn decode-state (value)
             if (struct? value)
               match
-                try-decode-map-as (.to-map value) State
+                try-decode-map-as (&struct:to-map value) State
                 (:ok checked) (Option :some checked)
                 (:err _) (Option :none)
               Option :none
