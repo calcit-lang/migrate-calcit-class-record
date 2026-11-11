@@ -104,13 +104,13 @@
                   comp-copy $ if
                     and (:interacted? store)
                       non-nil? $ :next-data state
-                    Option :some display-text
-                    Option :none
+                    Some display-text
+                    , None
                 if dev?
-                  Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control
-                  Option :none
+                  Some $ comp-typed-reel (>> states :reel) reel ({}) on-control
+                  , None
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State app.types/Op app.types/Store)
+          :schema $ quote $ Fn (reel.typed/State types/Op types/Store)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
         'comp-copy $ %{} 'CodeEntry (:doc |)
@@ -167,7 +167,7 @@
                     .unwrap $ get source :at
                     , :text $ .unwrap $ get source :text
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.comp.container/CodeNode)
+          :schema $ quote $ Fn Dynamic (-> CodeNode)
         'transform-compact $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-compact (data)
             let
@@ -297,7 +297,7 @@
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
-          :schema $ quote $ Ref (reel.typed/State app.types/Op app.types/Store)
+          :schema $ quote $ Ref (typed/State app.types/Op app.types/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ js/console.log |Dispatch: op
@@ -343,7 +343,7 @@
         'on-control! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-control! (control) (dispatch! control)
           :examples $ []
-          :schema $ quote $ Fn reel.typed/Control (-> Unit)
+          :schema $ quote $ Fn typed/Control (-> Unit)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set! (:storage-key config/site)
@@ -389,7 +389,7 @@
           :code $ quote $ def store
             app.types/Store :states ({}) :interacted? false
           :examples $ []
-          :schema $ quote app.types/Store
+          :schema $ quote Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
           :require $ app.types :refer $ Store
@@ -425,12 +425,12 @@
             if (struct? value)
               match
                 try-decode-map-as (&struct:to-map value) State
-                (:ok checked) (Option :some checked)
-                (:err _) (Option :none)
-              Option :none
+                (:ok checked) (Some checked)
+                (:err _) None
+              , None
           :examples $ []
           :schema $ quote $ Fn Dynamic
-            -> $ Option app.types/State
+            -> $ Option State
         'decode-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-store (data)
             if
@@ -450,23 +450,23 @@
                           (:some state)
                             match (decode-state state)
                               (:some checked)
-                                Option :some $ assoc states :data checked
-                              (:none) (Option :none)
-                          (:none) (Option :some states)
+                                Some $ assoc states :data checked
+                              (:none) None
+                          (:none) (Some states)
                       if cursor-valid?
                         match next-states
                           (:some checked-states)
-                            Option :some $ Store :states
+                            Some $ Store :states
                               decode-map-as checked-states $ Map Dynamic Dynamic
                               , :interacted? false
-                          (:none) (Option :none)
-                        Option :none
-                    Option :none
-                (:none) (Option :none)
-              Option :none
+                          (:none) None
+                        , None
+                    , None
+                (:none) None
+              , None
           :examples $ []
           :schema $ quote $ Fn Dynamic
-            -> $ Option app.types/Store
+            -> $ Option Store
           :tests $ [] $ %{} 'TestEntry (:name |serialized-state-roundtrip)
             :code $ quote $ let
                 raw $ parse-cirru-edn $ format-cirru-edn
