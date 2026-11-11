@@ -39,8 +39,9 @@
               decode-map-as data $ Map Dynamic Dynamic
               raise |Expected_map
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Input
             -> $ Map Dynamic Dynamic
+            :generics Input
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel on-control)
             let
@@ -167,35 +168,39 @@
                     .unwrap $ get source :at
                     , :text $ .unwrap $ get source :text
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> CodeNode)
+          :schema $ quote $ Fn Input (-> CodeNode) (:generics Input)
         'transform-compact $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-compact (data)
             let
                 root $ as-map data
                 files $ map-field root :files
               assoc root :files $ filter-map-kv files $ fn (k file)
-                hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
+                hint-fn $ Fn Dynamic Dynamic $ ->
+                  MapEntryDecision Dynamic $ Map Dynamic Dynamic
                 let
                     file-map $ &merge
                       {} $ :ns nil
                       as-map file
                     defs $ map-field file-map :defs
                     next-defs $ filter-map-kv defs $ fn (def-name code)
-                      hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
+                      hint-fn $ Fn Dynamic Dynamic $ ->
+                        MapEntryDecision Dynamic $ CodeEntry Dynamic
                       MapEntryDecision :keep def-name $ CodeEntry :doc | :code code
                   MapEntryDecision :keep k $ assoc
                     assoc file-map :ns $ CodeEntry :doc | :code $ .unwrap (get file-map :ns)
                     , :defs next-defs
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Input
             -> $ Map Dynamic Dynamic
+            :generics Input
         'transform-file-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-file-entry (snapshot)
             let
                 root $ as-map snapshot
                 files $ map-field root :files
               assoc root :files $ filter-map-kv files $ fn (k file)
-                hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
+                hint-fn $ Fn Dynamic Dynamic $ ->
+                  MapEntryDecision Dynamic $ FileEntry Dynamic Dynamic
                 let
                     file-map $ &merge
                       {} (:ns nil) (:defs nil)
@@ -204,8 +209,9 @@
                     .unwrap $ get file-map :ns
                     , :defs $ .unwrap (get file-map :defs)
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Input
             -> $ Map Dynamic Dynamic
+            :generics Input
         'transform-snapshot $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-snapshot (snapshot)
             let
@@ -215,12 +221,15 @@
                   map-field root :ir
                 files $ map-field ir :files
                 next-files $ filter-map-kv files $ fn (k file)
-                  hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
+                  hint-fn $ Fn Dynamic Dynamic $ ->
+                    MapEntryDecision Dynamic $ FileEntry (CodeEntry CodeNode)
+                      Map Dynamic $ CodeEntry CodeNode
                   let
                       file-map $ as-map file
                       defs $ map-field file-map :defs
                       next-defs $ filter-map-kv defs $ fn (def-name code)
-                        hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
+                        hint-fn $ Fn Dynamic Dynamic $ ->
+                          MapEntryDecision Dynamic $ CodeEntry CodeNode
                         MapEntryDecision :keep def-name $ CodeEntry :doc | :code $ transform-code code
                     MapEntryDecision :keep k $ FileEntry :ns
                       CodeEntry :doc | :code $ transform-code $ map-field file-map :ns
@@ -229,8 +238,9 @@
                 assoc (dissoc root :ir) :package $ .unwrap $ get ir :package
                 , :files next-files
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Input
             -> $ Map Dynamic Dynamic
+            :generics Input
           :tests $ [] $ %{} 'TestEntry (:name |preserves-three-legacy-formats)
             :code $ quote $ do
               let
