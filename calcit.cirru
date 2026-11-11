@@ -11,7 +11,7 @@
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'CodeEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct CodeEntry ([] Code) (:doc String) (:code Code)
+          :code $ quote $ defstruct CodeEntry (:generics Code) (:doc String) (:code Code)
           :examples $ []
           :schema $ quote StructDef
         'CodeNode $ %{} 'CodeEntry (:doc |)
@@ -26,7 +26,7 @@
           :examples $ []
           :schema $ quote StructDef
         'FileEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct FileEntry ([] Namespace Definitions) (:ns Namespace) (:defs Definitions)
+          :code $ quote $ defstruct FileEntry (:generics Namespace Definitions) (:ns Namespace) (:defs Definitions)
           :examples $ []
           :schema $ quote StructDef
         'Leaf $ %{} 'CodeEntry (:doc |)
@@ -68,7 +68,7 @@
                   :style $ {} (:white-space :pre) (:font-size 12)
                   :on-input $ fn (e d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn app.types/Op $ -> Unit
+                      Fn types/Op $ -> Unit
                       -> Unit
                     d! $ app.types/Op :states cursor $ assoc state :content
                       decode-map-as (:value e) 'String
@@ -140,8 +140,9 @@
               (:some value) (as-map value)
               (:none) (raise |Expected_map)
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) Tag
+          :schema $ quote $ Fn (Map Dynamic Value) Tag
             -> $ Map Dynamic Dynamic
+            :generics Value
         'transform-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-code (expr)
             let
@@ -160,7 +161,7 @@
                     .unwrap $ get source :at
                     , :data $ filter-map-kv (map-field source :data)
                       fn (k v)
-                        hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic app.comp.container/CodeNode)
+                        hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic CodeNode)
                         MapEntryDecision :keep k $ transform-code v
                 Leaf :by
                   .unwrap $ get source :by
