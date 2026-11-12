@@ -114,12 +114,13 @@
           :schema $ quote $ Fn (reel.typed/State types/Op types/Store)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
+            :features :io
         'comp-copy $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-copy (text)
             [] (effect-copy text)
               span $ {}
           :examples $ []
-          :schema $ quote $ Fn (Option String) (-> respo.schema/Component)
+          :schema $ quote $ Fn (Option String) (-> respo.schema/Component) (:features :io)
         'effect-copy $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-copy (raw-content) (action el at?)
             let
@@ -133,7 +134,7 @@
                   (:none) &unit
               , &unit
           :examples $ []
-          :schema $ quote $ Fn (Option String) (-> respo.schema/Effect) (:features :js-ffi)
+          :schema $ quote $ Fn (Option String) (-> respo.schema/Effect) (:features :io :js-ffi)
         'map-field $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn map-field (source key)
             match (get source key)
@@ -319,11 +320,11 @@
                   :timestamp $ shared/date-now-snapshot
             , &unit
           :examples $ []
-          :schema $ quote $ Fn app.types/ResolvedOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn app.types/ResolvedOp (-> Unit) (:features :js-ffi :state)
         'dispatch-event! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-event! (op) (dispatch! op)
           :examples $ []
-          :schema $ quote $ Fn app.types/Op (-> Unit)
+          :schema $ quote $ Fn app.types/Op (-> Unit) (:features :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println |Running_mode: $ if config/dev? |dev |release
@@ -345,7 +346,7 @@
             browser/set-interval! persist-storage! 60000
             println |App_started.
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
             narrow-element $ .unwrap $ browser/query-selector |.app
@@ -354,13 +355,13 @@
         'on-control! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-control! (control) (dispatch! control)
           :examples $ []
-          :schema $ quote $ Fn typed/Control (-> Unit)
+          :schema $ quote $ Fn typed/Control (-> Unit) (:features :state)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set! (:storage-key config/site)
               format-cirru-edn $ :store @*reel
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -371,14 +372,14 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! mount-target
               fn () $ comp-container @*reel on-control!
               , dispatch-event!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
