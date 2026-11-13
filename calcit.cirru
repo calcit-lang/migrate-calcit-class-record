@@ -441,8 +441,9 @@
                 (:err _) None
               , None
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Input
             -> $ Option State
+            :generics Input
         'decode-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-store (data)
             if
@@ -477,8 +478,9 @@
                 (:none) None
               , None
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Input
             -> $ Option Store
+            :generics Input
           :tests $ [] $ %{} 'TestEntry (:name |serialized-state-roundtrip)
             :code $ quote $ let
                 raw $ parse-cirru-edn $ format-cirru-edn
