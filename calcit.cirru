@@ -141,9 +141,9 @@
               (:some value) (as-map value)
               (:none) (raise |Expected_map)
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Value) Tag
+          :schema $ quote $ Fn (Map Key Value) Key
             -> $ Map Dynamic Dynamic
-            :generics Value
+            :generics Key Value
         'transform-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn transform-code (expr)
             let
@@ -481,23 +481,33 @@
           :schema $ quote $ Fn Input
             -> $ Option Store
             :generics Input
-          :tests $ [] $ %{} 'TestEntry (:name |serialized-state-roundtrip)
-            :code $ quote $ let
-                raw $ parse-cirru-edn $ format-cirru-edn
-                  {} $ :states $ {}
-                    :cursor $ []
-                    :data $ State :content "|0321合成🐈" :next-data nil
-                    :extra |keep
-              match (decode-store raw)
-                (:some restored)
-                  do
-                    assert= (State :content "|0321合成🐈" :next-data nil)
-                      .unwrap $ get (:states restored) :data
-                    assert= ([])
-                      .unwrap $ get (:states restored) :cursor
-                    assert= |keep $ .unwrap $ get (:states restored) :extra
-                (:none) (raise |Serialized-State-must-restore)
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry (:name |serialized-state-roundtrip)
+              :code $ quote $ let
+                  raw $ parse-cirru-edn $ format-cirru-edn
+                    {} $ :states $ {}
+                      :cursor $ []
+                      :data $ State :content "|0321合成🐈" :next-data nil
+                      :extra |keep
+                match (decode-store raw)
+                  (:some restored)
+                    do
+                      assert= (State :content "|0321合成🐈" :next-data nil)
+                        .unwrap $ get (:states restored) :data
+                      assert= ([])
+                        .unwrap $ get (:states restored) :cursor
+                      assert= |keep $ .unwrap $ get (:states restored) :extra
+                  (:none) (raise |Serialized-State-must-restore)
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |typed-inputs)
+              :code $ quote $ let
+                  state $ State :content |test :next-data nil
+                  states $ {} $ :data state
+                assert= (Some state) (decode-state state)
+                assert=
+                  Some $ Store :states states :interacted? false
+                  decode-store $ {} $ :states states
+              :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.types
     'app.updater $ %{} 'FileEntry
