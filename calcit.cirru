@@ -114,7 +114,7 @@
           :schema $ quote $ Fn (reel.typed/State types/Op types/Store)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
-            :features :io
+            :features :io :state
         'comp-copy $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-copy (text)
             [] (effect-copy text)
