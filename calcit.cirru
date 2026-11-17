@@ -112,7 +112,7 @@
                   , None
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State types/Op types/Store)
-            Fn reel.typed/Control $ -> Unit
+            Fn reel.typed/Control (-> Unit) (:features :io :state)
             -> respo.schema/Component
             :features :io :state
         'comp-copy $ %{} 'CodeEntry (:doc |)
