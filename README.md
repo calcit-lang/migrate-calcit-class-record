@@ -5,7 +5,7 @@ http://repo.calcit-lang.org/migrate-calcit-class-record/ 。
 
 ## 使用者需要注意
 
-本项目配对 Calcit / JavaScript runtime **0.43.0**，使用正式 Reel **0.11.2**、UI **0.15.4**、Respo **0.19.10**、JS FFI **0.2.18**，传递 Router **0.12.8**。升级后重新严格安装依赖、生成 JS 并刷新页面。
+本项目配对 Calcit / JavaScript runtime **0.44.0**，使用正式 Reel **0.11.2**、UI **0.15.4**、Respo **0.19.10**、JS FFI **0.2.18**，传递 Router **0.12.8**。升级后重新严格安装依赖、生成 JS 并刷新页面。
 
 `transform-code` 的返回值声明为 `CodeNode` union，成员为本地 Expr 和 Leaf。读取历史输入时继续保留扩展字段、缺失值和显式 nil 的原行为。UI 基础样式可能随依赖升级变化。
 
