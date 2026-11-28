@@ -333,7 +333,9 @@
               browser/storage-get $ :storage-key config/site
               (:some raw)
                 match
-                  app.types/decode-store $ parse-cirru-edn raw
+                  app.types/decode-store $ try (parse-cirru-edn raw)
+                    fn (err) (hud! |error |Invalid_saved_state)
+                      raise $ str err
                   (:some stored)
                     dispatch! $ app.types/Op :hydrate-storage stored
                   (:none)
