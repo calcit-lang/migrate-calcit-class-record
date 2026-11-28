@@ -5,7 +5,7 @@ http://repo.calcit-lang.org/migrate-calcit-class-record/ 。
 
 ## 使用者需要注意
 
-本项目配对 Calcit / JavaScript runtime **0.46.0**，使用正式 Reel **0.11.10**、UI **0.16.6**、Respo **0.20.0**、JS FFI **0.2.26**，传递 Router **0.12.18**。升级后重新严格安装依赖、生成 JS 并刷新页面。
+本项目配对 Calcit / JavaScript runtime **0.48.0**，使用正式 Reel **0.11.11**、UI **0.16.7**、Respo **0.20.1**、JS FFI **0.2.26**，传递 Router **0.12.19**。升级后重新严格安装依赖、生成 JS 并刷新页面。
 
 `transform-code` 的返回值声明为 `CodeNode` union，成员为本地 Expr 和 Leaf。读取历史输入时继续保留扩展字段、缺失值和显式 nil 的原行为。UI 基础样式可能随依赖升级变化。
 
@@ -41,7 +41,7 @@ Respo 入口仍接收开放 Enum，以兼容旧 `:app/event` 和 Reel 控制事�
 
 ## 开发与验证
 
-需要 Node.js 24、Yarn 4.18.0、官方 Calcit 0.46.0 和 Caps 0.1.1：
+需要 Node.js 24、Yarn 4.18.0、官方 Calcit 0.48.0 和 Caps 0.1.1：
 
 ```bash
 caps --strict --ci
